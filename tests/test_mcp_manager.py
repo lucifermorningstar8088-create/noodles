@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -60,8 +61,7 @@ def test_registry_persists_only_secret_references(tmp_path: Path) -> None:
     assert "Authorization" not in str(registry.list())
 
 
-@pytest.mark.asyncio
-async def test_untrusted_server_cannot_connect(tmp_path: Path) -> None:
+def test_untrusted_server_cannot_connect(tmp_path: Path) -> None:
     registry = MCPServerRegistry(tmp_path / "mcp.json")
     registry.add(
         MCPServerConfig(
@@ -72,5 +72,8 @@ async def test_untrusted_server_cannot_connect(tmp_path: Path) -> None:
     )
     manager = MCPManager(registry)
 
-    with pytest.raises(MCPError, match="explicitly trusted"):
-        await manager.list_tools("untrusted")
+    async def run() -> None:
+        with pytest.raises(MCPError, match="explicitly trusted"):
+            await manager.list_tools("untrusted")
+
+    asyncio.run(run())

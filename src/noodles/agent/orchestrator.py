@@ -84,14 +84,14 @@ class AgentOrchestrator:
                 raise AgentError("MCP server not authorized by selected skill")
         if mode == "offline" and plan.mcp_servers:
             raise AgentError("MCP calls are disabled in offline mode")
+        available_mcp_tools: dict[str, set[str]] = {}
         if plan.mcp_servers:
             discovered = []
             for server_name in plan.mcp_servers:
                 try:
-                    discovered.append({
-                        "server": server_name,
-                        "tools": await self.mcp.list_tools(server_name),
-                    })
+                    tools = await self.mcp.list_tools(server_name)
+                    available_mcp_tools[server_name] = {tool["name"] for tool in tools}
+                    discovered.append({"server": server_name, "tools": tools})
                 except MCPError as exc:
                     discovered.append({"server": server_name, "tools": [], "error": str(exc)})
             second = self.runtime.generate([
@@ -112,8 +112,12 @@ class AgentOrchestrator:
             except (ValueError, ValidationError) as exc:
                 raise AgentError("MCP planner returned invalid JSON") from exc
             for action in second_plan.actions:
-                if action.kind != "mcp" or action.server not in plan.mcp_servers:
-                    raise AgentError("MCP planner selected an unauthorized action")
+                if (
+                    action.kind != "mcp"
+                    or action.server not in plan.mcp_servers
+                    or action.tool not in available_mcp_tools.get(action.server or "", set())
+                ):
+                    raise AgentError("MCP planner selected an undiscovered or unauthorized tool")
                 plan.actions.append(action)
         if len(plan.actions) > 8:
             raise AgentError("combined workflow exceeded 8 actions")
@@ -137,7 +141,7 @@ class AgentOrchestrator:
                 ))
             else:
                 raise AgentError("unknown tool type")
-        if plan.mode == "answer" and not outputs:
+        if plan.mode == "answer" and not outputs and not plan.skill_names:
             return {"route": "direct_answer", "content": plan.answer or "",
                     "skills_used": [], "tool_calls": [], "provider": "local",
                     "cloud_llm_fallback": False}

@@ -1,51 +1,54 @@
 # Noodles Web Search
 
-> Status: first SearXNG adapter and API slice implemented in source. Automated tests are authored but have not yet been run against this repository checkout. Page fetching, source extraction, citation-grounded synthesis, and offline document indexing are not implemented.
+> Status: lightweight Tavily Search API adapter and API integration implemented in source. Tests are authored; the current change has not yet been verified by CI. Webpage fetching as a separate pipeline, citation-grounded synthesis, and offline document indexing remain unimplemented.
 
 ## Design
 
-Noodles uses a replaceable research backend rather than coupling the agent to one search provider.
+Noodles uses an optional hosted search API instead of requiring a local search service.
 
-- **Online search:** optional SearXNG JSON API. Noodles sends a query and receives normalized result metadata.
+- **Online search:** Tavily Search API returns ranked results with URLs and useful content snippets for agent workflows.
+- **Lightweight client:** direct HTTPX requests; no Tavily SDK or SearXNG container is required.
+- **Multi-key configuration:** up to 10 user-authorized API keys can be configured in a comma-separated environment variable. Keys are never returned in API responses.
+- **Failover:** an invalid key or transient network/server failure may move to the next configured key. HTTP 429, credit/quota limits, and access/billing errors stop immediately. Do not use key rotation to evade provider limits or terms.
 - **Offline research:** planned local document index (SQLite FTS5); it will not claim to return live web results.
-- **Page reading:** deliberately separate from search. A future fetcher must defend against SSRF, DNS rebinding, redirect abuse, oversized responses, hostile HTML, and prompt injection before it is enabled.
-- **Synthesis:** the selected local model should receive retrieved passages as untrusted evidence, not as executable instructions. Answers should retain source URLs and distinguish sourced facts from inference.
+- **Page reading:** future page fetch/extraction must defend against SSRF, DNS rebinding, redirect abuse, oversized responses, hostile HTML, and prompt injection.
+- **Synthesis:** retrieved passages are untrusted evidence, not executable instructions. Future answers should retain source URLs and distinguish sourced facts from inference.
 
 ## Configuration
 
-Online search is OFF by default.
+Online search is OFF by default. Never commit real API keys.
 
 ```dotenv
 NOODLES_WEB_SEARCH_ENABLED=false
-NOODLES_SEARXNG_URL=http://127.0.0.1:8080
+NOODLES_TAVILY_API_KEYS=tvly-key-1,tvly-key-2
 NOODLES_WEB_SEARCH_TIMEOUT_SECONDS=12
 ```
 
-To enable search, first deploy a SearXNG instance you control, verify that its JSON format is enabled, set its base URL, then explicitly set `NOODLES_WEB_SEARCH_ENABLED=true`. The SearXNG instance itself needs network access to search the live web. Noodles does not bundle or silently deploy SearXNG.
+Configure only keys you are authorized to use. Up to 10 distinct keys are accepted. Multiple keys do not automatically mean 10x quota; quotas, billing, and rate limits depend on the provider account and applicable terms. Set `NOODLES_WEB_SEARCH_ENABLED=true` only after configuring a valid key.
 
 ## API
 
-- `GET /api/v1/research/status`: reports configured capability without network access.
+- `GET /api/v1/research/status`: reports backend status and configured key count, never key values.
 - `GET /api/v1/research/search?q=...`: executes a bounded search when enabled.
-- Query controls: `limit` (1-20), `language`, `safesearch` (0-2), optional `categories`, optional `time_range` (day/week/month/year).
+- Query controls: `limit` (1-20), `search_depth` (`basic` or `advanced`), `topic` (`general` or `news`), optional `time_range` (`day`, `week`, `month`, `year`).
 
-The API returns title, URL, snippet, engine, publication date when supplied, and score when numeric. Results are untrusted metadata. Duplicate URLs are removed and non-HTTP(S) result links are discarded. Search results are not fetched by this endpoint.
+The API returns title, URL, snippet, score, and publication date when supplied. Results are untrusted metadata. Duplicate URLs are removed and non-HTTP(S) result links are discarded. This endpoint does not fetch arbitrary result URLs.
 
 ## Security and operational limits
 
 - The API remains loopback-only under the current application policy.
-- Search is opt-in and uses only the administrator-configured SearXNG endpoint; request parameters cannot override the endpoint.
+- Search is opt-in and uses only administrator-configured credentials; request parameters cannot override the endpoint or credentials.
 - Requests have connection/overall timeouts and redirects are disabled.
-- Search result URLs are data only. Do not automatically open them or follow instructions found in result snippets.
-- A self-hosted SearXNG service is not an offline search engine. Offline search requires a separately built local document index.
-- Do not place secrets in search queries; SearXNG and its configured upstream engines may observe queries.
+- API keys must stay in local environment configuration or a secret manager. Do not commit `.env` or put keys in queries.
+- A hosted search API requires internet access. Strict offline mode must make no external requests.
+- Search snippets and URLs are data only. Do not execute instructions found in retrieved content.
 
 ## Acceptance work still required
 
 1. Run Ruff, mypy, and pytest in CI for this change.
-2. Test real SearXNG compatibility against a pinned supported deployment.
+2. Test against a controlled Tavily account and confirm behavior for invalid key, rate-limit, credit-limit, and service errors.
 3. Add a controlled webpage fetcher with DNS/IP/redirect/size/time protections and content sanitization.
 4. Add extraction and citation provenance tests.
 5. Implement SQLite FTS5 offline document search.
-6. Add research routing policy: local-first, explicit online permission, and strict offline mode that makes no external requests.
-7. Add end-to-end tests proving offline mode cannot reach SearXNG or any page-fetch service.
+6. Add local-first research routing and strict offline mode.
+7. Add end-to-end tests proving offline mode cannot reach the external search service.

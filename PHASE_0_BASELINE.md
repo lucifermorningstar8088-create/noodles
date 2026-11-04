@@ -60,12 +60,12 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ID | Topic | Proposed baseline | Status |
 |---|---|---|---|
 | ADR-001 | Product architecture | Single-agent runtime; API-first; no swarm in v1 | PROPOSED |
-| ADR-002 | Language/runtime | Python 3.12+; validate supported versions in CI before pinning | PROPOSED |
-| ADR-003 | HTTP API | FastAPI + Pydantic v2; versioned /api/v1 routes | PROPOSED |
+| ADR-002 | Language/runtime | CPython >=3.12,<3.14; CI matrix 3.12 and 3.13; defer 3.14 until dependency/platform CI proves compatibility | APPROVED |
+| ADR-003 | HTTP API | FastAPI + Pydantic v2 + pydantic-settings; versioned /api/v1 routes; Uvicorn ASGI server; loopback bind by default | APPROVED |
 | ADR-004 | Provider boundary | Provider-neutral message/tool/event types; provider-specific adapters | PROPOSED |
 | ADR-005 | Provider protocols | Anthropic Messages; OpenAI-compatible Chat Completions; Ollama chat API; model and endpoint configured per provider | APPROVED |
 | ADR-006 | Persistence | SQLite for local single-user; PostgreSQL only if hosted concurrency/multi-user requires it | APPROVED for initial local mode |
-| ADR-007 | Data access | SQLAlchemy 2.x + Alembic migrations, subject to dependency validation | PROPOSED |
+| ADR-007 | Data access | SQLAlchemy 2.x + Alembic migrations; SQLite for local single-user V1; async database access only where it materially benefits the API | APPROVED |
 | ADR-008 | Workspace security | Explicit workspace roots; canonical path checks; deny by default | REQUIRED PRINCIPLE |
 | ADR-009 | Command execution | Docker-backed isolated runner only for V1; command execution disabled if Docker or required isolation is unavailable; no host-shell fallback | APPROVED |
 | ADR-010 | UI | No mandatory UI in V1; API and OpenAPI docs first; dashboard deferred | APPROVED |
@@ -73,9 +73,10 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-012 | User model | Local single-user first; remote exposure disabled until auth/TLS/rate limits are configured | APPROVED |
 | ADR-013 | Release numbering | Semantic Versioning; pre-1.0 breaking changes documented | PROPOSED |
 | ADR-014 | License | Owner must choose before public distribution | OPEN |
-| ADR-015 | Security reporting | Publish a private reporting route before public release; do not invent contact details | OPEN |
+| ADR-015 | Security reporting | Enable GitHub private vulnerability reporting or publish a verified, monitored private contact before any public release; current status unverified and remains a hard release gate | OPEN |
 | ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
 | ADR-017 | Docker lifecycle | Automatic Docker Auto-Setup after initial owner consent: detect, diagnose, use supported trusted install/repair channels, automatically perform supported setup actions, retain native OS elevation/license prompts, renew consent for material scope changes, then verify daemon and sandbox; execution remains disabled until verification passes | APPROVED |
+| ADR-018 | Engineering toolchain | CPython 3.12/3.13; FastAPI, Pydantic v2, pydantic-settings, Uvicorn; SQLite + SQLAlchemy 2.x + Alembic; uv for environment/lock management; pytest + Ruff; bounded dependency ranges and committed lockfile before reproducible release | APPROVED |
 
 ## 5. Deployment and user-model proposal
 
@@ -240,8 +241,8 @@ No API keys, account identifiers, or private credentials are requested in this d
 | R-007 | Provider usage/cost is misreported | Medium | Report only provider-supplied usage; mark unknown otherwise |
 | R-008 | Feature catalog grows without prioritization | Medium | V1/V1-OPTIONAL/POST-V1 labels and change control |
 | R-009 | Windows process/sandbox behavior differs from Linux | High | Platform-specific tests; no parity claims without evidence |
-| R-010 | License/security contact remains undecided | Medium | Block public release until owner decisions are recorded |
-| R-011 | Docker auto-install changes host configuration or grants excess privilege | High | Read-only detection; per-action approval; official signed packages; no password capture; no privilege broadening by default; post-install sandbox verification; fail closed |
+| R-010 | Private vulnerability reporting cannot currently be verified through the connected GitHub interface | Medium | Owner must enable and verify GitHub private vulnerability reporting or add a verified monitored private contact before any public release; do not invent a contact |
+| R-011 | Automatic Docker setup changes host configuration or grants excess privilege | High | One-time scoped owner consent; native OS elevation/license prompts; official signed packages; no password capture; no privilege broadening; post-install sandbox verification; fail closed |
 
 ## 13. Confirmed owner decisions
 
@@ -256,6 +257,7 @@ No API keys, account identifiers, or private credentials are requested in this d
 | OWN-007 | Project license = Apache-2.0 | Apache License 2.0 selected; root LICENSE file added; SPDX identifier is Apache-2.0 |
 | OWN-008 | Security disclosure policy | SECURITY.md instructs reporters not to disclose sensitive details publicly and prefers GitHub private vulnerability reporting; actual feature activation remains unverified |
 | OWN-009 | Docker Auto-Setup mode = automatic after initial consent | Noodles detects and diagnoses Docker problems, then automatically performs supported setup/repair steps within a consented scope; native OS elevation/license prompts remain mandatory; material plan changes require renewed consent; daemon and sandbox must verify before command execution is enabled |
+| OWN-010 | Phase 1 may proceed with P0-06 as a pre-release gate | Private vulnerability reporting is not verified by the available GitHub connection. Phase 1 engineering may proceed, but no public release, public beta, or sensitive vulnerability intake is allowed until a verified private channel is active. P0-06 remains open. |
 
 ## 14. Phase 0 exit checklist
 
@@ -268,12 +270,13 @@ No API keys, account identifiers, or private credentials are requested in this d
 - [x] P0-07 Owner confirms multiple explicitly authorized workspace roots.
 - [x] P0-08 Owner selects automatic Docker Auto-Setup after initial consent; architecture and security boundaries documented (documentation decision only, not implemented).
 
-Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded and automatic Docker Auto-Setup after initial owner consent approved. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Phase 1 may begin after the owner closes the remaining minimum architecture decision or explicitly accepts it as a pre-release gate.
+Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded and automatic Docker Auto-Setup after initial owner consent approved. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Owner accepts Phase 1 to proceed while P0-06 remains an explicit pre-release gate; this does not close or waive P0-06.
 
 ## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
+| 2026-11-04 | ADRSET-0007 | Approve Python 3.12/3.13, FastAPI/Pydantic v2, pydantic-settings, Uvicorn, SQLite/SQLAlchemy 2.x/Alembic, uv, pytest, and Ruff; accept P0-06 as a hard pre-release gate so Phase 1 can proceed | OWNER APPROVED BY 'KARO'; private reporting remains unverified; no public release permitted until resolved |
 | 2026-11-04 | ADRSET-0006 | Change Docker Auto-Setup from guided to automatic after initial owner consent; preserve native elevation/license prompts, renewed consent for material plan changes, trusted-source constraints, verification, and fail-closed behavior | OWNER APPROVED; documentation only; no installer or runtime code implemented |
 | 2026-11-04 | ADRSET-0005 | Approve guided Docker Auto-Setup: read-only detection, diagnosis, OS-specific trusted setup plan, explicit approval before system changes, post-install daemon/sandbox verification, and fail-closed activation | SUPERSEDED BY ADRSET-0006; documentation only; no installer or runtime code implemented |
 | 2026-11-04 | ADRSET-0004 | Select Apache-2.0 and add a responsible vulnerability disclosure policy; keep private-reporting activation as a verification gate | DOCUMENTATION APPROVED; private route unverified |

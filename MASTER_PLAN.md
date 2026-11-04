@@ -4,7 +4,7 @@
 >
 > **Current project status:** Planning baseline recorded. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.1.0
+> **Plan version:** 1.2.0
 > **Default branch:** `main`
 
 ---
@@ -244,10 +244,10 @@ State transitions must be explicit and validated. Terminal states must not silen
 - [ ] P0-02 Confirm product requirements and v1 scope with owner.
 - [ ] P0-03 Confirm supported deployment target and expected user model (single-user vs multi-user).
 - [ ] P0-04 Confirm provider API requirements, endpoint formats, and expected Ollama usage.
-- [ ] P0-05 Record architecture decisions and unresolved risks.
+- [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
 - [ ] P0-06 Define versioning, release, and security-reporting policy.
 
-**Exit gate:** Scope, deployment assumptions, and key architecture decisions are documented. No implementation is considered complete in this phase.
+**Exit gate:** Scope, deployment assumptions, and key architecture decisions are documented and owner-dependent decisions are confirmed. No implementation is considered complete in this phase. See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) for the current proposal and open decisions.
 
 ### Phase 1 — Repository foundation and engineering standards
 
@@ -559,7 +559,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
-| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
+| 2026-11-04 | CHG-0003 | ADD | Add Phase 0 architecture baseline, proposed deployment/provider/security/persistence decisions, open owner questions, and risk register. | Convert broad plan into explicit reviewable decisions | Requested by repository owner to start Phase 0 | PHASE_0_BASELINE.md created; proposals documented; no application code implemented |\n| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
 | 2026-11-04 | CHG-0001 | ADD | Create initial master plan, roadmap, checklists, security baseline, acceptance catalogue, and strict change-control rules. | Project governance | Requested by repository owner in chat | Plan file creation; implementation not performed |
 
 ### Change entry template

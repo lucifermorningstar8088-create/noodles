@@ -1,97 +1,113 @@
 # Noodles Hybrid Architecture
 
-> Status: hybrid architecture and first local inference API slice implemented on the feature branch. A hosted dashboard, secure tunnel provisioning, agent tool orchestration, and full acceptance are still future work.
+> Status: local inference foundation and first skill/MCP orchestration slice are implemented on the feature branch. Full runtime, live MCP provider acceptance, persistent conversation memory, browser workflows, and hosted UI are not yet production-verified.
 
-## 1. Non-negotiable product rule
+## Non-negotiable rule
 
-**The model executes locally. Online services are tools, not model providers.**
+The reasoning model always runs locally through Noodles-managed GGUF and llama.cpp. Online services are tools, never model providers. There is no cloud LLM provider, cloud fallback, or silent provider switching. If local inference is unavailable, the agent returns an error.
 
-Noodles does not call Anthropic, OpenAI, or another hosted LLM for inference. It does not fall back to a cloud model if the local model is missing, unloaded, too slow, or errors. Inference fails closed with an actionable API error.
-
-## 2. Runtime topology
+## Runtime topology
 
 ```text
-                 User / Browser
-                       |
-              Local UI (current API)
-                       |
-             Noodles local API process
-               /                 \
-       Local model runtime      Online tool adapters
-       llama.cpp / GGUF         Tavily / external APIs
-               |                 |
-         Local model files     Internet services
-               |
-        Local RAM / CPU
-
-Future optional hosted dashboard
-               |
-     Private VPN / TLS tunnel
-               |
-       Authenticated local API
+User chat / Work request
+          |
+          v
+  Local Noodles API
+          |
+          v
+   Local GGUF LLM
+          |
+          v
+   Skill-first router
+     /     |      \
+ direct  local    selected MCP
+ answer  tools    servers
+          |         |
+      offline    online APIs
+          \         /
+           v       v
+        Local LLM synthesis
+                |
+           Final response
 ```
 
-The local process owns the model, model registry, prompts, inference requests, and tool orchestration. Online tools are called outbound from the local process. An internet outage disables online tools but does not disable an already-installed local model.
+The local process owns model loading, planning, skills, permissions, tool orchestration, and response synthesis. MCP servers provide online APIs and optional local integrations. They never provide LLM inference.
 
-## 3. Trust and data boundaries
+## Decision lifecycle
 
-| Data / capability | Execution / storage | Network behavior |
-|---|---|---|
-| GGUF model artifacts | User's local model directory | Download only on explicit user action |
-| Model registry | Local filesystem | No external request |
-| llama.cpp inference | Local process and machine RAM | No inference network request |
-| Tavily search | Local adapter | Outbound HTTPS to Tavily |
-| External APIs | Local tool adapters | Outbound HTTPS to explicitly configured services |
-| Authenticated remote API | Local process | Only through user-configured private VPN/TLS tunnel |
-| Hosted dashboard | Not implemented | Must not proxy LLM inference through a cloud model |
+1. The local model reads the user request and installed skill metadata.
+2. It chooses direct answer or workflow and selects relevant skills.
+3. Direct answers do not connect to MCP.
+4. If an online capability is needed, the router selects an MCP server name that is explicitly allowed by a selected skill.
+5. Only that selected server is connected and its tools are discovered.
+6. A second local planning step chooses from the discovered tool inventory.
+7. The executor validates skill permissions, server selection, and tool identity before execution.
+8. Tool outputs are treated as untrusted data.
+9. The local model synthesizes the result and does not claim unverified success.
 
-Web results are untrusted input. They must never become executable instructions or silently modify local policy. Secrets must not be included in model prompts or tool output.
+## Offline and online modes
 
-## 4. Local inference lifecycle
+- auto: local tools are always available; MCP may be used only when selected by the router and allowed by a skill.
+- offline: no MCP discovery or call is permitted. The model and registered local tools continue to work without internet.
+- online: allows MCP-backed capabilities, but still uses local LLM inference.
 
-Implemented endpoints:
-- `GET /api/v1/models/installed`
-- `POST /api/v1/models/{model_id}/load`
-- `POST /api/v1/models/{model_id}/unload`
-- `GET /api/v1/models/runtime`
-- `POST /api/v1/inference/chat`
+The Hugging Face model catalog/download API is a model-management feature, not an LLM inference provider. Model download requires an explicit user action.
 
-The runtime supports one active model at a time. A different model cannot replace the active one until it is unloaded. The first implementation uses llama.cpp CPU execution (`n_gpu_layers=0`); GPU acceleration is intentionally not advertised. The runtime checks the registered artifact path, rejects symlinks and non-GGUF files, and lazily imports `llama-cpp-python`.
+## Skills
 
-The chat endpoint accepts bounded plain-text system/user/assistant messages. Tool-call orchestration, streaming responses, cancellation, prompt-template validation, and context/token preflight remain future work. A successful API response is evidence of local inference only when an actual model and native binding are installed.
+Skills are instruction-only Markdown files with validated YAML frontmatter. Each skill declares a stable name, description, triggers, allowed local tools, allowed MCP server names, and risk level. Skill content is loaded into the local model context when selected. Skill files cannot execute Python, shell commands, or arbitrary scripts.
 
-## 5. Online tools
+Example templates:
+- examples/skills/web-research/SKILL.md
+- examples/skills/coding/SKILL.md
+- examples/skills/document-analysis/SKILL.md
 
-Online tools are independent of model inference. Tavily is opt-in and called from the local process. Search failure returns a tool error; it does not change the LLM provider or model. The local model can still answer using its existing knowledge when internet tools are unavailable, while clearly identifying when fresh evidence is unavailable.
+Skill API:
+- GET /api/v1/skills
+- POST /api/v1/skills
+- PUT /api/v1/skills/{name}
 
-## 6. Remote access
+## Local tools
 
-Default API bind remains `127.0.0.1`. Non-loopback binding requires:
-- `NOODLES_API_ALLOW_REMOTE_BIND=true`
-- `NOODLES_API_AUTH_TOKEN` with at least 32 characters
+Local tools are trusted Python callables registered by application code. The model may choose only registered names. The initial built-ins expose basic system time and platform information. Arbitrary host-shell execution and model-generated code execution are not enabled.
 
-When configured, bearer authentication is required for every HTTP route and compared in constant time. This is only an application authentication boundary. It is **not** a replacement for TLS, a VPN/private tunnel, network ACLs, rate limiting, or abuse protection. Do not expose the API directly to the public internet. Tunnel creation/provisioning and hosted dashboard are not implemented.
+## MCP integrations
 
-## 7. Failure matrix
+Supported transports in the adapter:
+- stdio, launched as an explicit executable plus argument array without shell interpolation.
+- Streamable HTTP, requiring HTTPS for remote hosts. Plain HTTP is accepted only for loopback.
 
-| Condition | Required behavior |
-|---|---|
-| No model loaded | Local inference returns 503 |
-| llama-cpp-python missing | Model load returns 503; no cloud fallback |
-| Local model load fails | Report failure; no provider switch |
-| Different model requested while one is loaded | Return conflict; explicitly unload first |
-| Tavily unavailable / internet down | Search fails independently; local inference remains available |
-| Auth token missing or incorrect | Return 401 |
-| Remote bind requested without opt-in and token | Configuration validation fails |
+MCP servers are stored in the local registry. Newly added servers must be explicitly trusted. Credential values must be environment-variable references and are resolved only at connection time. Remote endpoint configuration is user-controlled and should be reviewed before trust is granted.
 
-## 8. Remaining implementation gates
+MCP API:
+- GET /api/v1/mcp/servers
+- POST /api/v1/mcp/servers
+- DELETE /api/v1/mcp/servers/{name}
+- GET /api/v1/mcp/servers/{name}/tools
+- POST /api/v1/mcp/servers/{name}/tools/{tool_name}/call
 
-- Install and pin supported llama-cpp-python CPU builds for Windows and Linux; verify actual inference on both.
-- GPU backend detection and per-platform acceleration matrix.
-- Model load memory preflight and robust cancellation/shutdown behavior.
-- Agent planner, typed tool registry, permission policy, and local tool-call orchestration.
-- Local conversation persistence and offline document retrieval.
-- Webpage extraction with SSRF/DNS-rebinding/redirect/size protections.
-- Private tunnel integration and hosted dashboard.
-- End-to-end tests proving inference makes no outbound LLM-provider calls.
-- Full security review and CI verification.
+Direct MCP management calls are explicit operator actions. Agent-initiated calls additionally require a selected skill to authorize the server.
+
+## Tavily
+
+Tavily is not integrated directly into the Noodles core. Configure a compatible Tavily MCP server, register it with the name tavily, and install the web-research skill template. The skill authorizes that server. Noodles stores no Tavily API key and makes no direct Tavily HTTP requests.
+
+## Security and trust boundaries
+
+- Never use a cloud LLM fallback.
+- Never auto-trust MCP servers.
+- Never place raw secrets in the MCP registry or model prompts.
+- Treat skill text, MCP descriptions, tool results, and web content as untrusted input.
+- Validate all tool names and arguments and bound execution size/time.
+- Do not run model-generated shell commands or scripts.
+- Keep the API bound to loopback by default. Remote access requires explicit opt-in, strong bearer authentication, and a private TLS VPN/tunnel.
+
+## Current implementation limits
+
+- llama.cpp runtime uses CPU-only configuration; GPU acceleration is not implemented.
+- Actual model inference requires a compatible local llama-cpp-python installation and registered GGUF.
+- The initial local tool set is intentionally small.
+- MCP integration is SDK-backed but needs integration testing against real stdio and Streamable HTTP servers.
+- Skill installation and MCP registry APIs are implemented; a graphical management UI is not.
+- Browser automation, webpage extraction, offline document indexing, workspace file tools, Docker sandbox execution, cancellation, streaming, and persistent conversation storage are not implemented.
+- The feature branch has not passed final CI or full end-to-end acceptance yet.

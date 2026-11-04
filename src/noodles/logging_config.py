@@ -45,7 +45,7 @@ class JsonFormatter(logging.Formatter):
             "message": redact_secrets(record.getMessage()),
         }
         if record.exc_info:
-            payload["exception"] = self.formatException(record.exc_info)
+            payload["exception"] = redact_secrets(self.formatException(record.exc_info))
         return json.dumps(payload, ensure_ascii=False)
 
 

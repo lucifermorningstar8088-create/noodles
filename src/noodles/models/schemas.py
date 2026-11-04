@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from urllib.parse import urlsplit
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Literal
 
@@ -20,6 +21,7 @@ class ModelManifest(BaseModel):
     filename: str = Field(min_length=1, max_length=500)
     local_path: str = Field(min_length=1, max_length=2048)
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_checksum_verified: bool = False
     size_bytes: int = Field(gt=0)
     license: str | None = Field(default=None, max_length=200)
     source_url: str = Field(min_length=1, max_length=2048)
@@ -30,6 +32,14 @@ class ModelManifest(BaseModel):
     def validate_repository(cls, value: str) -> str:
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", value):
             raise ValueError("repository must be an owner/name identifier")
+        return value
+
+    @field_validator("source_url")
+    @classmethod
+    def validate_source_url(cls, value: str) -> str:
+        parsed = urlsplit(value)
+        if parsed.scheme != "https" or parsed.hostname != "huggingface.co":
+            raise ValueError("source_url must be an HTTPS Hugging Face URL")
         return value
 
     @field_validator("filename")

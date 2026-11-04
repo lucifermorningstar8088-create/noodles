@@ -1,6 +1,7 @@
 """Validated application settings."""
 
 import ipaddress
+from pathlib import Path
 from functools import lru_cache
 from typing import Literal
 
@@ -23,6 +24,8 @@ class Settings(BaseSettings):
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    model_storage_dir: Path = Field(default_factory=lambda: Path.home() / ".noodles" / "models")
+    model_max_download_bytes: int = Field(default=200_000_000_000, ge=1_000_000, le=2_000_000_000_000)
 
     @model_validator(mode="after")
     def enforce_loopback_binding(self) -> "Settings":

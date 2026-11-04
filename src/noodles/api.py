@@ -12,12 +12,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator
 
 from noodles import __version__
+from noodles.agent.orchestrator import AgentError, AgentOrchestrator
 from noodles.config import Settings, get_settings
 from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
-from noodles.models.registry import ModelRegistry
-from noodles.agent.orchestrator import AgentError, AgentOrchestrator
 from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
+from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
 from noodles.skills.manager import SkillError, SkillManager
 from noodles.tools.registry import LocalToolRegistry
@@ -69,6 +69,14 @@ class AgentChatRequest(BaseModel):
     mode: Literal["auto", "offline", "online"] = "auto"
     history: list[ChatMessage] = Field(default_factory=list, max_length=12)
 
+    @model_validator(mode="after")
+    def validate_history(self) -> AgentChatRequest:
+        if any(item.role == "system" for item in self.history):
+            raise ValueError("agent history cannot contain system messages")
+        if sum(len(item.content) for item in self.history) > 60000:
+            raise ValueError("combined agent history must not exceed 60000 characters")
+        return self
+
 
 class LocalChatRequest(BaseModel):
     """Strictly local inference request; no provider or fallback selector exists."""
@@ -81,7 +89,7 @@ class LocalChatRequest(BaseModel):
     top_p: float = Field(default=0.95, gt=0.0, le=1.0)
 
     @model_validator(mode="after")
-    def bound_total_prompt(self) -> "LocalChatRequest":
+    def bound_total_prompt(self) -> LocalChatRequest:
         if sum(len(message.content) for message in self.messages) > 100_000:
             raise ValueError("combined message content must not exceed 100000 characters")
         return self

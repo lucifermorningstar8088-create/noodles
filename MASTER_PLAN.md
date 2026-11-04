@@ -211,7 +211,7 @@ The agent loop must follow this sequence:
 
 The runtime must have configurable limits for maximum steps, tool calls, wall-clock duration, model tokens/cost where measurable, retries, and command duration. Reaching a limit must stop safely and produce an incomplete/blocked status, not a fabricated success.
 
-### 4.4 Docker Environment Manager — guided Auto-Setup
+### 4.4 Docker Environment Manager — automatic Auto-Setup
 
 The Docker Environment Manager is a separate, narrowly scoped host setup component. It is not an agent command tool and must not inherit unrestricted shell authority.
 
@@ -263,12 +263,13 @@ State transitions must be explicit and validated. Terminal states must not silen
 **Goal:** Establish a reliable project baseline and working rules.
 
 - [x] P0-01 Record initial repository reconnaissance in this plan.
-- [x] P0-02 Confirm V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command sandbox, and three provider families (owner-approved).
+- [x] P0-02 Confirm V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command sandbox with automatic Docker setup after initial owner consent, and three provider families (owner-approved).
 - [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
 - [x] P0-04 Confirm provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API (owner-approved); model IDs and endpoint URLs remain configurable.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
 - [ ] P0-06 Verify private vulnerability-reporting route is enabled and usable; Apache-2.0 license selected and LICENSE added. Review release policy before public release.
 - [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
+- [x] P0-08 Confirm Docker Auto-Setup mode: automatic after initial owner consent, retaining native OS elevation/license prompts and fail-closed behavior (owner-confirmed; documentation only, not implemented).
 
 **Exit gate:** Scope, deployment assumptions, and key architecture decisions are documented and owner-dependent decisions are confirmed. No implementation is considered complete in this phase. See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) for the current proposal and open decisions.
 
@@ -341,7 +342,7 @@ State transitions must be explicit and validated. Terminal states must not silen
 - [ ] P4-10 Add tests for permission boundaries and malicious path inputs.
 - [ ] P4-11 Implement read-only Docker/OS/prerequisite detection and structured diagnostic states.
 - [ ] P4-12 Implement OS-specific trusted installation/repair plan generation (official vendor guidance and supported package managers only).
-- [ ] P4-13 Implement per-action approval gates for privileged/system-changing setup steps; approval must bind to the exact plan and expire when the plan changes.
+- [ ] P4-13 Implement one-time consent for the bounded Docker setup workflow; persist scope/version, support revocation, and require renewed consent when the plan materially changes. Keep native OS elevation/license prompts mandatory.
 - [ ] P4-14 Implement narrow installer execution with signature/checksum verification where available, timeout, output limits, and audit events; never collect admin passwords or execute unverified remote scripts.
 - [ ] P4-15 Implement post-setup Docker daemon and disposable non-privileged sandbox health verification.
 - [ ] P4-16 Keep command execution disabled until all sandbox checks pass; re-check health before each execution session and fail closed on drift.
@@ -519,10 +520,12 @@ All tests below are planned. None are claimed to have run.
 | AT-24 | Data deletion/retention | Policy is enforced and auditable |
 | AT-25 | Docker absent | Read-only detection reports the correct state; command execution stays disabled and no host fallback occurs |
 | AT-26 | Docker service stopped/unreachable | Diagnosis distinguishes service/daemon failure from missing installation; setup plan is presented before changes |
-| AT-27 | Guided setup approval denied | No privileged/system-changing action runs; command execution remains disabled |
+| AT-27 | Initial Docker setup consent denied/revoked | No system-changing action runs; command execution remains disabled |
 | AT-28 | Docker install/repair succeeds | CLI and daemon are re-detected; disposable non-privileged sandbox health check must pass before activation |
 | AT-29 | Installer source/integrity invalid | Setup is blocked; unverified package/script is never executed |
 | AT-30 | Docker health/isolation drifts after activation | Next command session is blocked until health and isolation are revalidated |
+| AT-31 | Docker setup plan materially changes | Automatic setup pauses and requests renewed consent before expanded actions |
+| AT-32 | Native OS elevation/license/reboot interaction required | Setup pauses for user/OS action; no bypass or forced reboot occurs |
 
 ---
 
@@ -688,7 +691,7 @@ Do these in order. Do not start feature implementation until Phase 0 decisions a
 2. [x] Confirm local single-user deployment and multiple explicitly authorized workspaces.
 3. [ ] Resolve license selection and private security-reporting route before public release.
 4. [ ] Confirm or revise the proposed Python/FastAPI baseline before dependency lock-in.
-5. [ ] Implement the Docker Environment Manager in Phase 4 according to DEC-015; this decision is approved but no code is implemented yet.
+5. [ ] Implement the Docker Environment Manager in Phase 4 according to DEC-015; automatic mode is approved but no code is implemented yet.
 6. [ ] After the remaining Phase 0 entry decision is closed, authorize Phase 1 foundation work.
 
 ---

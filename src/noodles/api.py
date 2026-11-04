@@ -17,8 +17,8 @@ from noodles.config import Settings, get_settings
 from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
 from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
-from noodles.models.registry import ModelRegistry
 from noodles.models.recommendations import recommendation_payload
+from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
 from noodles.skills.manager import SkillError, SkillManager
 from noodles.tools.registry import LocalToolRegistry

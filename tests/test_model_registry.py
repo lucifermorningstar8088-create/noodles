@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -9,8 +10,6 @@ from noodles.models.schemas import ModelManifest
 
 def make_manifest(path: Path, *, model_id: str = "tiny-test") -> ModelManifest:
     path.write_bytes(b"GGUF test fixture")
-    import hashlib
-
     return ModelManifest(
         model_id=model_id,
         repository="example/tiny-model",
@@ -75,3 +74,38 @@ def test_registry_refuses_to_overwrite_corrupt_file(tmp_path: Path) -> None:
     registry.registry_file.write_text("not-json", encoding="utf-8")
     with pytest.raises(ModelRegistryError):
         registry.list_models()
+
+
+def test_manifest_rejects_windows_path_traversal() -> None:
+    with pytest.raises(ValidationError):
+        ModelManifest(
+            model_id="x",
+            repository="example/model",
+            revision="a" * 40,
+            filename=r"..\\evil.gguf",
+            local_path="/tmp/x",
+            sha256="b" * 64,
+            size_bytes=10,
+            source_url="https://huggingface.co/example/model",
+        )
+
+
+def test_registry_rejects_hash_mismatch(tmp_path: Path) -> None:
+    artifact = tmp_path / "tiny.gguf"
+    manifest = make_manifest(artifact).model_copy(update={"sha256": "0" * 64})
+    registry = ModelRegistry(tmp_path)
+
+    with pytest.raises(ModelRegistryError, match="SHA-256"):
+        registry.register(manifest)
+
+
+def test_registry_rejects_symlinked_artifact(tmp_path: Path) -> None:
+    real_file = tmp_path / "real.gguf"
+    manifest = make_manifest(real_file)
+    link = tmp_path / "link.gguf"
+    link.symlink_to(real_file)
+    linked_manifest = manifest.model_copy(update={"local_path": str(link)})
+    registry = ModelRegistry(tmp_path)
+
+    with pytest.raises(ModelRegistryError, match="symbolic link"):
+        registry.register(linked_manifest)

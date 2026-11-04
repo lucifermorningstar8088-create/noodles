@@ -52,10 +52,16 @@ class SkillManager:
 
     def install(self, raw: str) -> dict[str, Any]:
         manifest, _ = self._parse(raw)
-        target_dir = self.root / manifest.name
+        target_dir = (self.root / manifest.name).resolve()
+        try:
+            target_dir.relative_to(self.root)
+        except ValueError as exc:
+            raise SkillError("skill path escaped skill root") from exc
         target_dir.mkdir(parents=True, exist_ok=True)
+        if target_dir.is_symlink():
+            raise SkillError("skill directory cannot be a symbolic link")
         target = target_dir / "SKILL.md"
-        if target.exists():
+        if target.exists() or target.is_symlink():
             raise SkillError("skill already exists; use the explicit update operation")
         temporary = target.with_suffix(".md.tmp")
         temporary.write_text(raw, encoding="utf-8")

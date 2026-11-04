@@ -42,9 +42,7 @@ class MCPServerConfig(BaseModel):
         if self.url:
             parsed = urlsplit(self.url)
             if parsed.username or parsed.password or not parsed.hostname:
-                raise ValueError(
-                    "MCP URL must not contain credentials and must include a hostname"
-                )
+                raise ValueError("MCP URL must not contain credentials and must include a hostname")
             is_loopback = parsed.hostname == "localhost"
             try:
                 is_loopback = is_loopback or ipaddress.ip_address(parsed.hostname).is_loopback
@@ -74,9 +72,7 @@ class MCPServerRegistry:
         if self.path.exists():
             try:
                 raw = json.loads(self.path.read_text(encoding="utf-8"))
-                self._servers = {
-                    item["name"]: MCPServerConfig.model_validate(item) for item in raw
-                }
+                self._servers = {item["name"]: MCPServerConfig.model_validate(item) for item in raw}
             except (OSError, ValueError, KeyError, TypeError, ValidationError) as exc:
                 raise MCPError("MCP server registry is corrupt or invalid") from exc
 
@@ -127,8 +123,16 @@ class MCPManager:
     @staticmethod
     def _resolve_config(config: MCPServerConfig) -> MCPServerConfig:
         inherited_names = (
-            "PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR",
-            "TEMP", "TMP", "TMPDIR", "LANG", "LC_ALL",
+            "PATH",
+            "HOME",
+            "USERPROFILE",
+            "SYSTEMROOT",
+            "WINDIR",
+            "TEMP",
+            "TMP",
+            "TMPDIR",
+            "LANG",
+            "LC_ALL",
         )
         env = {key: os.environ[key] for key in inherited_names if key in os.environ}
         for key, value in config.env.items():
@@ -204,9 +208,7 @@ class MCPManager:
             async with self._open_session(config) as session:
                 if len(json.dumps(arguments, ensure_ascii=False)) > 32_000:
                     raise MCPError("MCP tool arguments exceed the 32 KB limit")
-                result = await asyncio.wait_for(
-                    session.call_tool(tool_name, arguments), timeout=30
-                )
+                result = await asyncio.wait_for(session.call_tool(tool_name, arguments), timeout=30)
                 if getattr(result, "isError", False):
                     raise MCPError("MCP tool returned an error")
                 content = []
@@ -216,9 +218,10 @@ class MCPManager:
                     else:
                         content.append({"type": type(item).__name__})
                 structured = getattr(result, "structuredContent", None)
-                if structured is not None and len(
-                    json.dumps(structured, ensure_ascii=False, default=str)
-                ) > 50000:
+                if (
+                    structured is not None
+                    and len(json.dumps(structured, ensure_ascii=False, default=str)) > 50000
+                ):
                     structured = None
                 return {
                     "server": server_name,

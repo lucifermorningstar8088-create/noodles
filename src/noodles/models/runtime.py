@@ -26,7 +26,8 @@ class NativeModelRuntime:
             return {"engine": "llama.cpp", "installed": False, "loaded_model_id": None,
                     "backend": "unavailable", "reason": "native_binding_not_installed"}
         return {"engine": "llama.cpp", "installed": True, "loaded_model_id": None,
-                "backend": "detected", "version": getattr(llama_cpp, "__version__", "unknown")}
+                "backend": "not_verified", "reason": "binding_imported_backend_not_initialized",
+                "version": getattr(llama_cpp, "__version__", "unknown")}
 
     def load(self, model_id: str, model_path: Path, *, context_size: int = 4096,
              threads: int | None = None) -> None:

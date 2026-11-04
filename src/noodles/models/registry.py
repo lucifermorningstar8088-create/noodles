@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -47,6 +48,15 @@ class ModelRegistry:
             raise ModelRegistryError("model artifact must be an existing regular file")
         if artifact.stat().st_size != manifest.size_bytes:
             raise ModelRegistryError("model artifact size does not match its manifest")
+        with artifact.open("rb") as handle:
+            if handle.read(4) != b"GGUF":
+                raise ModelRegistryError("model artifact does not have a GGUF file signature")
+            digest = hashlib.sha256()
+            handle.seek(0)
+            for chunk in iter(lambda: handle.read(4 * 1024 * 1024), b""):
+                digest.update(chunk)
+        if digest.hexdigest() != manifest.sha256:
+            raise ModelRegistryError("model artifact SHA-256 does not match its manifest")
         with self._lock:
             data = self._read()
             if manifest.model_id in data:

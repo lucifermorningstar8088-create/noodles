@@ -24,6 +24,7 @@ class AgentPlan(BaseModel):
     intent: str
     mode: str
     skill_names: list[str] = Field(default_factory=list)
+    mcp_servers: list[str] = Field(default_factory=list)
     actions: list[PlannedAction] = Field(default_factory=list)
     answer: str | None = None
 
@@ -45,28 +46,21 @@ class AgentOrchestrator:
             raise ValueError("invalid mode")
         skills = self.skills.list()
         local_tools = self.local_tools.describe()
-        mcp_inventory = []
-        if mode != "offline":
-            for server in self.mcp.registry.list():
-                if server["enabled"] and server["trusted"]:
-                    try:
-                        mcp_inventory.append({
-                            "server": server["name"],
-                            "tools": await self.mcp.list_tools(server["name"]),
-                        })
-                    except MCPError:
-                        continue
+        mcp_inventory = [
+            server["name"] for server in self.mcp.registry.list()
+            if server["enabled"] and server["trusted"]
+        ] if mode != "offline" else []
         prompt = (
             "Route this request. Prefer an installed skill for specialized tasks. "
             "Only use listed tools. MCP calls require a selected skill that explicitly "
             "allows that server. Do not call MCP in offline mode. Never invent tools. "
-            "Return JSON only: intent, mode(answer|workflow), skill_names, actions, answer. "
+            "Return JSON only: intent, mode(answer|workflow), skill_names, mcp_servers, local actions, answer. "
             "Each action: kind(local|mcp), tool, server(optional), arguments, purpose. "
-            "Maximum 5 skills and 8 actions."
+            "Choose MCP server names only from the supplied list. Do not choose MCP tool names yet. Maximum 5 skills, 5 MCP servers, and 8 local actions."
         )
         payload = {
             "request": message, "mode": mode, "skills": skills,
-            "local_tools": local_tools, "mcp_tools": mcp_inventory,
+            "local_tools": local_tools, "available_mcp_servers": mcp_inventory,
         }
         planned = self.runtime.generate([
             {"role": "system", "content": prompt},
@@ -83,6 +77,46 @@ class AgentOrchestrator:
             manifest, instructions = self.skills.load(name)
             manifests[name] = manifest
             skill_instructions.append({"name": name, "instructions": instructions})
+        if len(plan.mcp_servers) > 5:
+            raise AgentError("planner exceeded MCP server limit")
+        for server_name in plan.mcp_servers:
+            if not any(server_name in item.allowed_mcp_servers for item in manifests.values()):
+                raise AgentError("MCP server not authorized by selected skill")
+        if mode == "offline" and plan.mcp_servers:
+            raise AgentError("MCP calls are disabled in offline mode")
+        if plan.mcp_servers:
+            discovered = []
+            for server_name in plan.mcp_servers:
+                try:
+                    discovered.append({
+                        "server": server_name,
+                        "tools": await self.mcp.list_tools(server_name),
+                    })
+                except MCPError as exc:
+                    discovered.append({"server": server_name, "tools": [], "error": str(exc)})
+            second = self.runtime.generate([
+                {"role": "system", "content":
+                 "Select only tools from the discovered MCP inventory. Do not invent names. "
+                 "Use only the already selected servers and selected skill permissions. "
+                 "Return JSON only with intent, mode='workflow', skill_names=[], "
+                 "mcp_servers=[], actions, answer=null. Each action has kind='mcp', "
+                 "tool, server, arguments, purpose. Maximum 8 actions."},
+                {"role": "user", "content": json.dumps({
+                    "request": message,
+                    "selected_skills": skill_instructions,
+                    "discovered_tools": discovered,
+                }, ensure_ascii=False)},
+            ], max_tokens=1200, temperature=0.0, top_p=0.9)
+            try:
+                second_plan = AgentPlan.model_validate(json.loads(str(second["content"])))
+            except (ValueError, ValidationError) as exc:
+                raise AgentError("MCP planner returned invalid JSON") from exc
+            for action in second_plan.actions:
+                if action.kind != "mcp" or action.server not in plan.mcp_servers:
+                    raise AgentError("MCP planner selected an unauthorized action")
+                plan.actions.append(action)
+        if len(plan.actions) > 8:
+            raise AgentError("combined workflow exceeded 8 actions")
         outputs = []
         for action in plan.actions:
             if action.kind == "local":

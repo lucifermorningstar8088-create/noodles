@@ -30,9 +30,10 @@ class Settings(BaseSettings):
     model_max_download_bytes: int = Field(
         default=200_000_000_000, ge=1_000_000, le=2_000_000_000_000
     )
-    web_search_enabled: bool = False
-    tavily_api_keys: str | None = None
-    web_search_timeout_seconds: float = Field(default=12.0, ge=2.0, le=30.0)
+    skills_dir: Path = Field(default_factory=lambda: Path.home() / ".noodles" / "skills")
+    mcp_registry_path: Path = Field(
+        default_factory=lambda: Path.home() / ".noodles" / "mcp-servers.json"
+    )
 
     @model_validator(mode="after")
     def enforce_network_and_secret_policy(self) -> "Settings":
@@ -52,12 +53,6 @@ class Settings(BaseSettings):
             token = self.api_auth_token.get_secret_value()
             if len(token) < 32:
                 raise ValueError("NOODLES_API_AUTH_TOKEN must contain at least 32 characters")
-        if self.tavily_api_keys:
-            keys = [key.strip() for key in self.tavily_api_keys.split(",") if key.strip()]
-            if len(keys) > 10:
-                raise ValueError("at most 10 Tavily API keys may be configured")
-            if len(set(keys)) != len(keys):
-                raise ValueError("duplicate Tavily API keys are not allowed")
         return self
 
 

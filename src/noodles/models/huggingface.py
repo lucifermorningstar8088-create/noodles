@@ -32,7 +32,10 @@ _ALLOWED_DOWNLOAD_HOSTS = (
 def _allowed_host(host: str | None) -> bool:
     if not host:
         return False
-    return any(host == allowed or host.endswith("." + allowed) for allowed in _ALLOWED_DOWNLOAD_HOSTS)
+    return any(
+        host == allowed or host.endswith("." + allowed)
+        for allowed in _ALLOWED_DOWNLOAD_HOSTS
+    )
 
 
 def _safe_repo(repo: str) -> str:
@@ -43,8 +46,13 @@ def _safe_repo(repo: str) -> str:
 
 def _safe_filename(filename: str) -> str:
     path = PurePosixPath(filename)
-    if (path.is_absolute() or ".." in path.parts or chr(92) in filename or chr(0) in filename
-            or not filename.lower().endswith(".gguf")):
+    if (
+        path.is_absolute()
+        or ".." in path.parts
+        or chr(92) in filename
+        or chr(0) in filename
+        or not filename.lower().endswith(".gguf")
+    ):
         raise ModelDownloadError("filename must be a safe relative GGUF path")
     return filename
 
@@ -52,8 +60,14 @@ def _safe_filename(filename: str) -> str:
 class HuggingFaceModelService:
     """Reads public model metadata and downloads exact-revision GGUF files only."""
 
-    def __init__(self, storage_dir: Path, registry: ModelRegistry, max_download_bytes: int,
-                 *, timeout_seconds: float = 30.0) -> None:
+    def __init__(
+        self,
+        storage_dir: Path,
+        registry: ModelRegistry,
+        max_download_bytes: int,
+        *,
+        timeout_seconds: float = 30.0,
+    ) -> None:
         self.storage_dir = storage_dir.expanduser().resolve()
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self.registry = registry
@@ -61,8 +75,11 @@ class HuggingFaceModelService:
         self.timeout_seconds = timeout_seconds
 
     def _client(self) -> httpx.Client:
-        return httpx.Client(timeout=httpx.Timeout(self.timeout_seconds, connect=10.0),
-                            follow_redirects=False, headers={"User-Agent": "Noodles/0.1"})
+        return httpx.Client(
+            timeout=httpx.Timeout(self.timeout_seconds, connect=10.0),
+            follow_redirects=False,
+            headers={"User-Agent": "Noodles/0.1"},
+        )
 
     def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         query = query.strip()
@@ -97,7 +114,10 @@ class HuggingFaceModelService:
         repository = _safe_repo(repository)
         if not re.fullmatch(r"[A-Za-z0-9._-]{1,128}", revision):
             raise ModelDownloadError("revision must be a branch, tag, or commit identifier")
-        url = f"https://huggingface.co/api/models/{quote(repository, safe='/')}/revision/{quote(revision, safe='')}"
+        url = (
+            f"https://huggingface.co/api/models/{quote(repository, safe='/')}"
+            f"/revision/{quote(revision, safe='')}"
+        )
         with self._client() as client:
             response = client.get(url)
             response.raise_for_status()
@@ -118,8 +138,12 @@ class HuggingFaceModelService:
                 files.append({
                     "filename": name,
                     "size_bytes": lfs.get("size", item.get("size")),
-                    "sha256": lfs.get("oid") if isinstance(lfs.get("oid"), str)
-                        and re.fullmatch(r"[0-9a-f]{64}", lfs["oid"]) else None,
+                    "sha256": (
+                        lfs.get("oid")
+                        if isinstance(lfs.get("oid"), str)
+                        and re.fullmatch(r"[0-9a-f]{64}", lfs["oid"])
+                        else None
+                    ),
                 })
         card = payload.get("cardData") or {}
         return {
@@ -129,15 +153,24 @@ class HuggingFaceModelService:
             "license": card.get("license"), "files": files,
         }
 
-    def download(self, repository: str, revision: str, filename: str, model_id: str,
-                 *, accept_license: bool = False) -> ModelManifest:
+    def download(
+        self,
+        repository: str,
+        revision: str,
+        filename: str,
+        model_id: str,
+        *,
+        accept_license: bool = False,
+    ) -> ModelManifest:
         repository = _safe_repo(repository)
         filename = _safe_filename(filename)
         if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}", model_id):
             raise ModelDownloadError("model_id contains unsupported characters")
         metadata = self.inspect(repository, revision)
         if metadata["private"] or metadata["gated"]:
-            raise ModelDownloadError("private or gated repositories are not supported in this version")
+            raise ModelDownloadError(
+                "private or gated repositories are not supported in this version"
+            )
         if not metadata["license"]:
             raise ModelDownloadError("model license is missing; cannot proceed without license metadata")
         if not accept_license:
@@ -173,7 +206,10 @@ class HuggingFaceModelService:
         if target.exists() or target.is_symlink():
             raise ModelDownloadError("target model file already exists; refusing to overwrite")
         partial = target.with_name(target.name + ".part")
-        url = f"https://huggingface.co/{quote(repository, safe='/')}/resolve/{metadata['revision']}/{quote(filename, safe='/')}?download=true"
+        url = (
+            f"https://huggingface.co/{quote(repository, safe='/')}/resolve/"
+            f"{metadata['revision']}/{quote(filename, safe='/')}?download=true"
+        )
         digest = hashlib.sha256()
         downloaded = 0
         if partial.exists():
@@ -210,11 +246,17 @@ class HuggingFaceModelService:
                         mode = "wb"
                     else:
                         response.raise_for_status()
-                        raise ModelDownloadError(f"unexpected download status: {response.status_code}")
+                        raise ModelDownloadError(
+                            f"unexpected download status: {response.status_code}"
+                        )
                     content_range = response.headers.get("content-range")
                     if mode == "ab":
                         match = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+)", content_range or "")
-                        if not match or int(match.group(1)) != downloaded or int(match.group(3)) != expected_size:
+                        if (
+                            not match
+                            or int(match.group(1)) != downloaded
+                            or int(match.group(3)) != expected_size
+                        ):
                             raise ModelDownloadError("server returned an invalid range response")
                     with partial.open(mode) as handle:
                         for chunk in response.iter_bytes(1024 * 1024):
@@ -222,7 +264,9 @@ class HuggingFaceModelService:
                                 continue
                             downloaded += len(chunk)
                             if downloaded > expected_size or downloaded > self.max_download_bytes:
-                                raise ModelDownloadError("download exceeded declared or configured size")
+                                raise ModelDownloadError(
+                                    "download exceeded declared or configured size"
+                                )
                             handle.write(chunk)
                             digest.update(chunk)
                         handle.flush()
@@ -231,16 +275,23 @@ class HuggingFaceModelService:
             else:
                 raise ModelDownloadError("too many download redirects")
         if downloaded != expected_size:
-            raise ModelDownloadError(f"download incomplete: expected {expected_size} bytes, received {downloaded}")
+            raise ModelDownloadError(
+                f"download incomplete: expected {expected_size} bytes, received {downloaded}"
+            )
         actual_hash = digest.hexdigest()
         expected_hash = file_info.get("sha256")
         if expected_hash and actual_hash != expected_hash:
             raise ModelDownloadError("download SHA-256 does not match Hugging Face LFS metadata")
         with partial.open("rb") as handle:
             if handle.read(4) != b"GGUF":
-                raise ModelDownloadError("downloaded file does not have a GGUF signature")
+                raise ModelDownloadError(
+                    "downloaded file does not have a GGUF signature"
+                )
         os.replace(partial, target)
-        source_url = f"https://huggingface.co/{repository}/resolve/{metadata['revision']}/{quote(filename, safe='/')}"
+        source_url = (
+            f"https://huggingface.co/{repository}/resolve/"
+            f"{metadata['revision']}/{quote(filename, safe='/')}"
+        )
         manifest = ModelManifest(
             model_id=model_id, repository=repository, revision=metadata["revision"],
             filename=filename, local_path=str(target), sha256=actual_hash,

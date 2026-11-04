@@ -48,5 +48,8 @@ jobs:
       - name: Static type check
         run: uv run mypy src/noodles
 
+      - name: Dependency vulnerability audit
+        run: uv run pip-audit
+
       - name: Tests
         run: uv run pytest

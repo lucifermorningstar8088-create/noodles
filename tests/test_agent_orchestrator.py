@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 from typing import Any
@@ -38,8 +39,7 @@ class FakeMCPManager:
         raise AssertionError("direct answers must not call MCP")
 
 
-@pytest.mark.asyncio
-async def test_direct_answer_does_not_connect_to_mcp(tmp_path: Path) -> None:
+def test_direct_answer_does_not_connect_to_mcp(tmp_path: Path) -> None:
     agent = AgentOrchestrator(
         FakeRuntime(),  # type: ignore[arg-type]
         SkillManager(Path(tmp_path) / "skills"),
@@ -47,7 +47,7 @@ async def test_direct_answer_does_not_connect_to_mcp(tmp_path: Path) -> None:
         FakeMCPManager(),  # type: ignore[arg-type]
     )
 
-    result = await agent.chat("What is a prime number?", mode="auto")
+    result = asyncio.run(agent.chat("What is a prime number?", mode="auto"))
 
     assert result["route"] == "direct_answer"
     assert result["content"] == "A concise local answer."

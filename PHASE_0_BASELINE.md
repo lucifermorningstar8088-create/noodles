@@ -106,11 +106,12 @@ Safety requirements:
 - OpenAI-compatible is not a guarantee of full compatibility. Maintain endpoint/model capability flags and adapter-specific tests.
 - Do not silently assume support for parallel tool calls, strict JSON schema, streaming, vision, or reasoning fields.
 
-### Ollama
-- Treat local Ollama as an optional provider.
-- Configure host/base URL and model explicitly.
-- Detect connection/model availability and report actionable errors.
-- Do not assume tool calling is supported equally by every local model.
+### Noodles-native local inference
+- Support GGUF local model artifacts through the Noodles-managed model lifecycle documented in [docs/MODEL_RUNTIME.md](./docs/MODEL_RUNTIME.md).
+- Noodles owns catalog discovery, pinned model download, integrity/license checks, model registration, hardware profiling, native llama.cpp runtime setup, and inference lifecycle.
+- No Ollama service, endpoint, daemon, or separate model server is required or supported.
+- CPU inference is the baseline; GPU acceleration is advertised only after compatible backend initialization and inference smoke tests.
+- Model-specific tool-calling and other capabilities must be validated; never assume them.
 
 ### Shared provider rules
 - Normalize internal text, tool calls, usage, finish reasons, and errors.
@@ -224,7 +225,7 @@ Every task must have a unique ID and correlation ID; validated request and selec
 | Command runner? | Docker/container isolation; disabled if unavailable | Prevents host-level execution |
 | License? | Owner selects | Legal distribution decision |
 | Security contact? | Owner supplies a private reporting route | Needed before public release |
-| Cloud providers? | Anthropic + OpenAI-compatible; optional Ollama | Matches requested provider set |
+| Model connectivity? | Anthropic + OpenAI-compatible cloud APIs; native Noodles-managed GGUF local inference | No Ollama service or dependency; local model lifecycle is owned by Noodles |
 | Target OS? | Develop/test Windows and Linux; Docker deployment on Linux; macOS only after validation | Avoid unsupported compatibility claims |
 
 No API keys, account identifiers, or private credentials are requested in this document.

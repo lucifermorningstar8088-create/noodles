@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from pathlib import PurePosixPath
+from pathlib import PurePosixPath, PureWindowsPath
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -36,8 +36,10 @@ class ModelManifest(BaseModel):
     @classmethod
     def validate_filename(cls, value: str) -> str:
         path = PurePosixPath(value)
-        if path.is_absolute() or ".." in path.parts or not value.lower().endswith(".gguf"):
+        windows_path = PureWindowsPath(value)
+        if (path.is_absolute() or windows_path.is_absolute() or ".." in path.parts
+                or ".." in windows_path.parts or not value.lower().endswith(".gguf")):
             raise ValueError("filename must be a safe relative GGUF path")
-        if "\\\\" in value or "\\0" in value:
+        if chr(92) in value or chr(0) in value:
             raise ValueError("filename contains invalid path characters")
         return value

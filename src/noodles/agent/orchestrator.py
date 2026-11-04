@@ -240,11 +240,13 @@ class AgentOrchestrator:
                 )
                 if not allowed:
                     raise AgentError("MCP server not authorized by selected skill")
-                outputs.append(
-                    await self.mcp.call_tool(
+                try:
+                    result = await self.mcp.call_tool(
                         action.server, action.tool, action.arguments
                     )
-                )
+                except MCPError as exc:
+                    raise AgentError("authorized MCP tool call failed") from exc
+                outputs.append(result)
             else:
                 raise AgentError("unknown tool type")
 

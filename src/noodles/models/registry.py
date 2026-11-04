@@ -43,7 +43,9 @@ class ModelRegistry:
         try:
             artifact.relative_to(self.storage_dir)
         except ValueError as exc:
-            raise ModelRegistryError("model artifact must be inside the configured model directory") from exc
+            raise ModelRegistryError(
+                "model artifact must be inside the configured model directory"
+            ) from exc
         if not artifact.is_file() or artifact.is_symlink():
             raise ModelRegistryError("model artifact must be an existing regular file")
         if artifact.stat().st_size != manifest.size_bytes:

@@ -2,12 +2,11 @@
 
 from fastapi import FastAPI
 
+from noodles import __version__
+from noodles.config import Settings, get_settings
 from noodles.models.hardware import inspect_hardware
 from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime
-
-from noodles import __version__
-from noodles.config import Settings, get_settings
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

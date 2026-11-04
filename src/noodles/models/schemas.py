@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 from pathlib import PurePosixPath, PureWindowsPath
-from urllib.parse import urlsplit
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 

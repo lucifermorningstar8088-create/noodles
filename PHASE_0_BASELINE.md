@@ -1,6 +1,6 @@
 # Noodles — Phase 0 Architecture Baseline
 
-> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, and three provider families confirmed; license and private security-reporting route remain OPEN.
+> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, three provider families, and Apache-2.0 license confirmed; private vulnerability-reporting activation remains OPEN.
 > Date: 2026-11-04
 > Applies to: v1 planning and Phase 1 foundation.
 > Rule: A proposal is not an approved decision. Do not implement an OPEN decision as though it were confirmed.
@@ -224,6 +224,8 @@ No API keys, account identifiers, or private credentials are requested in this d
 | OWN-004 | V1 research = optional | Controlled web research/retrieval is an optional V1 capability behind explicit tool permissions and source/evidence handling |
 | OWN-005 | V1 command execution = Docker sandbox only | Commands run only inside a verified Docker isolation boundary; disable command execution if Docker/isolation is unavailable; never fall back to unrestricted host execution |
 | OWN-006 | V1 providers = three families | Support Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat APIs; exact model IDs and endpoint URLs remain runtime configuration |
+| OWN-007 | Project license = Apache-2.0 | Apache License 2.0 selected; root LICENSE file added; SPDX identifier is Apache-2.0 |
+| OWN-008 | Security disclosure policy | SECURITY.md instructs reporters not to disclose sensitive details publicly and prefers GitHub private vulnerability reporting; actual feature activation remains unverified |
 
 ## 14. Phase 0 exit checklist
 
@@ -232,15 +234,16 @@ No API keys, account identifiers, or private credentials are requested in this d
 - [x] P0-03 Owner confirms deployment target and user model: local PC, single-user.
 - [x] P0-04 Owner confirms provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API. Exact model IDs and endpoint URLs are configuration values, not fixed product decisions.
 - [x] P0-05 Proposed architecture and unresolved risks documented.
-- [ ] P0-06 Owner confirms license and private security-reporting route; release policy proposal reviewed.
+- [ ] P0-06 Verify GitHub private vulnerability reporting is enabled and usable; Apache-2.0 license selected and LICENSE added. Review release policy before public release.
 - [x] P0-07 Owner confirms multiple explicitly authorized workspace roots.
 
-Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. License selection and the private security-reporting route remain open and must be resolved before public release. Exact model IDs and endpoint URLs are runtime configuration. Phase 1 may begin after the owner closes the remaining minimum architecture decision or explicitly accepts it as a pre-release gate.
+Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Phase 1 may begin after the owner closes the remaining minimum architecture decision or explicitly accepts it as a pre-release gate.
 
 ## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
+| 2026-11-04 | ADRSET-0004 | Select Apache-2.0 and add a responsible vulnerability disclosure policy; keep private-reporting activation as a verification gate | DOCUMENTATION APPROVED; private route unverified |
 | 2026-11-04 | ADRSET-0003 | Record owner-approved V1 scope: API-first, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families | APPROVED; documentation only |
 | 2026-11-04 | ADRSET-0002 | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces | APPROVED; documentation only |
 | 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |

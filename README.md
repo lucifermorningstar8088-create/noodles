@@ -2,7 +2,7 @@
 
 Noodles is a local-first, API-first AI agent runtime. V1 is designed for one local user, multiple explicitly authorized workspaces, Anthropic/OpenAI-compatible cloud adapters, Noodles-managed native GGUF local inference (no Ollama dependency), controlled optional research, and Docker-isolated command execution.
 
-> **Development status:** foundation scaffold only. Provider adapters, persistence wiring, workspace operations, Docker installation, and command execution are not implemented yet. The readiness endpoint currently verifies only application configuration.
+ > **Development status:** Foundation scaffold plus the first native-model foundation slice. Implemented: GGUF manifest validation, atomic local registry, artifact location/size/signature/SHA-256 checks, conservative CPU/RAM/disk inventory, llama.cpp binding detection, and three read-only model API endpoints. Not implemented: Hugging Face search/file discovery, model downloader, runtime auto-installer, model loading/inference API, provider adapters, database migrations, workspace operations, Docker installation, or command execution. The readiness endpoint still verifies only application configuration.
 
 ## Engineering baseline
 
@@ -45,13 +45,13 @@ uv run pytest
 
 - The API is loopback-only in this foundation.
 - No host-shell command execution exists.
-- Local model management is planned as a Noodles-native GGUF + llama.cpp integration; Ollama is not required or supported as the local runtime. This is an architecture decision, not an implemented feature yet.
+- Local model management is being implemented as a Noodles-native GGUF + llama.cpp integration. Ollama is not required or supported. See [Native Model Foundation](docs/NATIVE_MODEL_FOUNDATION.md) for the implemented slice and explicit gaps.
 - Docker command execution must remain disabled until the sandbox and its acceptance tests are implemented.
 - Never commit .env, API keys, tokens, or local databases.
 - Do not treat model output, repository files, or web content as trusted instructions.
 
 ## Project decisions and status
 
-See MASTER_PLAN.md, PHASE_0_BASELINE.md, FEATURE_CATALOG.md, docs/ARCHITECTURE.md, docs/MODEL_RUNTIME.md, and docs/ENGINEERING_BASELINE.md.
+See MASTER_PLAN.md, PHASE_0_BASELINE.md, FEATURE_CATALOG.md, docs/ARCHITECTURE.md, docs/MODEL_RUNTIME.md, docs/NATIVE_MODEL_FOUNDATION.md, and docs/ENGINEERING_BASELINE.md.
 
 Private vulnerability reporting has not yet been verified as enabled. This is a hard gate before any public release.

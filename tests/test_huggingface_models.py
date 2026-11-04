@@ -17,31 +17,50 @@ REVISION = "a" * 40
 REPO = "owner/tiny-model"
 
 
-def make_service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-                 *, gated: bool = False, license_name: str = "apache-2.0",
-                 declared_size: int | None = None) -> HuggingFaceModelService:
+def make_service(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    gated: bool = False,
+    license_name: str = "apache-2.0",
+    declared_size: int | None = None,
+) -> HuggingFaceModelService:
     digest = hashlib.sha256(GGUF_BYTES).hexdigest()
     size = len(GGUF_BYTES) if declared_size is None else declared_size
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith(f"/api/models/{REPO}/revision/main"):
-            return httpx.Response(200, json={
-                "sha": REVISION,
-                "gated": gated,
-                "private": False,
-                "cardData": {"license": license_name},
-                "siblings": [{
-                    "rfilename": "tiny.gguf",
-                    "size": size,
-                    "lfs": {"size": size, "oid": digest},
-                }],
-            })
+            return httpx.Response(
+                200,
+                json={
+                    "sha": REVISION,
+                    "gated": gated,
+                    "private": False,
+                    "cardData": {"license": license_name},
+                    "siblings": [
+                        {
+                            "rfilename": "tiny.gguf",
+                            "size": size,
+                            "lfs": {"size": size, "oid": digest},
+                        }
+                    ],
+                },
+            )
         if "/resolve/" in request.url.path:
             return httpx.Response(200, content=GGUF_BYTES)
         if request.url.path == "/api/models":
-            return httpx.Response(200, json=[{"id": REPO, "sha": REVISION,
-                                               "downloads": 12, "gated": False,
-                                               "cardData": {"license": "apache-2.0"}}])
+            return httpx.Response(
+                200,
+                json=[
+                    {
+                        "id": REPO,
+                        "sha": REVISION,
+                        "downloads": 12,
+                        "gated": False,
+                        "cardData": {"license": "apache-2.0"},
+                    }
+                ],
+            )
         return httpx.Response(404)
 
     transport = httpx.MockTransport(handler)
@@ -98,9 +117,7 @@ def test_download_requires_explicit_license_acceptance(
         service.download(REPO, "main", "tiny.gguf", "tiny-local")
 
 
-def test_download_rejects_gated_repository(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_download_rejects_gated_repository(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     service = make_service(tmp_path, monkeypatch, gated=True)
 
     with pytest.raises(ModelDownloadError, match="gated"):
@@ -123,12 +140,22 @@ def test_download_rejects_lfs_hash_mismatch(
 
     def bad_hash_handler(request: httpx.Request) -> httpx.Response:
         if "/revision/" in request.url.path:
-            return httpx.Response(200, json={
-                "sha": REVISION, "gated": False, "private": False,
-                "cardData": {"license": "apache-2.0"},
-                "siblings": [{"rfilename": "tiny.gguf", "size": len(GGUF_BYTES),
-                              "lfs": {"size": len(GGUF_BYTES), "oid": "0" * 64}}],
-            })
+            return httpx.Response(
+                200,
+                json={
+                    "sha": REVISION,
+                    "gated": False,
+                    "private": False,
+                    "cardData": {"license": "apache-2.0"},
+                    "siblings": [
+                        {
+                            "rfilename": "tiny.gguf",
+                            "size": len(GGUF_BYTES),
+                            "lfs": {"size": len(GGUF_BYTES), "oid": "0" * 64},
+                        }
+                    ],
+                },
+            )
         return httpx.Response(200, content=GGUF_BYTES)
 
     transport = httpx.MockTransport(bad_hash_handler)

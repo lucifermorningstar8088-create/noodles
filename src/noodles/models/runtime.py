@@ -39,7 +39,7 @@ class NativeModelRuntime:
             raise ValueError("model_path must point to an existing GGUF file")
         try:
             llama_module = import_module("llama_cpp")
-            llama_class = getattr(llama_module, "Llama")
+            llama_class = llama_module.Llama
         except (ImportError, AttributeError) as exc:
             raise NativeRuntimeUnavailable(
                 "llama-cpp-python is not installed; native runtime installation is not yet enabled"

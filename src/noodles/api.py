@@ -106,7 +106,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.get("/api/v1/models/installed", tags=["models"])
     def installed_models() -> dict[str, object]:
         """List registered local model manifests; never scans or executes arbitrary files."""
-        return {"models": [item.model_dump(mode="json") for item in model_registry.list_models()]}
+        return {
+            "models": [item.model_dump(mode="json") for item in model_registry.list_models()]
+        }
 
     @application.get("/api/v1/models/hardware", tags=["models"])
     def model_hardware() -> dict[str, object]:
@@ -133,7 +135,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status_code=503, detail="Web search is disabled by configuration"
             )
         if search_service is None:
-            raise HTTPException(status_code=503, detail="Set NOODLES_SEARXNG_URL to enable web search")
+            raise HTTPException(
+                status_code=503,
+                detail="Set NOODLES_SEARXNG_URL to enable web search",
+            )
         try:
             return search_service.search(
                 q, limit=limit, language=language, safesearch=safesearch,

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     model_max_download_bytes: int = Field(
         default=200_000_000_000, ge=1_000_000, le=2_000_000_000_000
     )
+    web_search_enabled: bool = False
+    searxng_url: str | None = None
+    web_search_timeout_seconds: float = Field(default=12.0, ge=2.0, le=30.0)
 
     @model_validator(mode="after")
     def enforce_loopback_binding(self) -> "Settings":

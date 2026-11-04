@@ -2,7 +2,7 @@
 
 Noodles is a local-first, API-first AI agent runtime. V1 is designed for one local user, multiple explicitly authorized workspaces, Anthropic/OpenAI-compatible cloud adapters, Noodles-managed native GGUF local inference (no Ollama dependency), controlled optional research, and Docker-isolated command execution.
 
- > **Development status:** Foundation scaffold plus native-model management and the first online-research slice. Implemented in source: GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, llama.cpp binding detection, Hugging Face GGUF catalog/download APIs, and an opt-in SearXNG JSON search adapter with normalized results. Automated tests for the research adapter are authored but not yet verified in CI. Not implemented: native runtime auto-installer, model loading/inference API, provider adapters, database migrations, workspace operations, Docker installation, webpage fetching, offline document indexing, or command execution. The readiness endpoint still verifies only application configuration.
+ > **Development status:** Foundation scaffold plus native-model management and the first online-research slice. Implemented in source: GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, llama.cpp binding detection, Hugging Face GGUF catalog/download APIs, and an opt-in Tavily search adapter with normalized results and bounded configuration for up to 10 API keys. Automated tests for the research adapter are authored but not yet verified in CI. Not implemented: native runtime auto-installer, model loading/inference API, provider adapters, database migrations, workspace operations, Docker installation, webpage fetching, offline document indexing, or command execution. The readiness endpoint still verifies only application configuration.
 
 ## Engineering baseline
 
@@ -59,11 +59,11 @@ Private vulnerability reporting has not yet been verified as enabled. This is a 
 
 ## Optional web research
 
-Noodles can query an administrator-configured SearXNG instance. Online search is disabled by default:
+Noodles can query the Tavily Search API. Online search is disabled by default:
 
 ```dotenv
 NOODLES_WEB_SEARCH_ENABLED=false
-NOODLES_SEARXNG_URL=http://127.0.0.1:8080
+NOODLES_TAVILY_API_KEYS=tvly-your-key-here
 ```
 
-Set `NOODLES_WEB_SEARCH_ENABLED=true` only after configuring and testing your own SearXNG instance. Search status and query endpoints are documented in [Web Search](docs/WEB_SEARCH.md). Live web search requires internet access at the SearXNG service; it is not available in strict offline mode. Webpage fetching and local offline document search are future work.
+Set `NOODLES_TAVILY_API_KEYS` in your local `.env` and then set `NOODLES_WEB_SEARCH_ENABLED=true`. You can configure up to 10 authorized keys, comma-separated. Key rotation is limited to invalid-key/transient failures; HTTP 429 and quota/access limits stop immediately rather than being bypassed. See [Web Search](docs/WEB_SEARCH.md). Live web search requires internet access; it is not available in strict offline mode. Offline document search is future work.

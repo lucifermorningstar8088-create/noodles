@@ -17,6 +17,7 @@ from noodles.config import Settings, get_settings
 from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
 from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
+from noodles.models.recommendations import recommendation_payload
 from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
 from noodles.skills.manager import SkillError, SkillManager
@@ -150,6 +151,46 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Search public Hugging Face repositories filtered to GGUF models."""
         try:
             return {"models": model_service.search(q, limit)}
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=502, detail="Hugging Face catalog request failed"
+            ) from exc
+        except ModelDownloadError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @application.get("/api/v1/models/recommended", tags=["models"])
+    def recommended_models(
+        per_family_limit: Annotated[int, Query(ge=1, le=5)] = 3,
+    ) -> dict[str, object]:
+        """Discover ranked GGUF candidates; never downloads or loads a model."""
+        models: list[dict[str, object]] = []
+        seen: set[str] = set()
+        try:
+            for preset in recommendation_payload():
+                matches = model_service.search(preset["query"], per_family_limit)
+                for match in matches:
+                    repository = match.get("repository")
+                    if not isinstance(repository, str) or repository in seen:
+                        continue
+                    seen.add(repository)
+                    models.append(
+                        {
+                            **match,
+                            "rank": preset["rank"],
+                            "recommended_model": preset["label"],
+                            "parameters": preset["parameters"],
+                            "reason": preset["reason"],
+                            "suggested_quantization": preset["suggested_quantization"],
+                            "selection_required": True,
+                        }
+                    )
+            return {
+                "models": models,
+                "selection_required": True,
+                "download_on_list": False,
+                "load_on_download": False,
+                "cloud_llm_fallback": False,
+            }
         except httpx.HTTPError as exc:
             raise HTTPException(
                 status_code=502, detail="Hugging Face catalog request failed"

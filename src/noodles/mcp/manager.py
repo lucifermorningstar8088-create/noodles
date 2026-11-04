@@ -168,7 +168,7 @@ class MCPManager:
     async def list_tools(self, server_name: str) -> list[dict[str, Any]]:
         config = self._trusted_config(server_name)
         try:
-            async for session in self._open_session(config):
+            async with self._open_session(config) as session:
                 result = await session.list_tools()
                 return [
                     {
@@ -181,7 +181,6 @@ class MCPManager:
                 ]
         except Exception as exc:
             raise MCPError(f"MCP tool discovery failed for {server_name}") from exc
-        raise MCPError("MCP session ended without a response")
 
     async def call_tool(
         self, server_name: str, tool_name: str, arguments: dict[str, Any]
@@ -190,7 +189,7 @@ class MCPManager:
         if not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", tool_name):
             raise MCPError("invalid MCP tool name")
         try:
-            async for session in self._open_session(config):
+            async with self._open_session(config) as session:
                 result = await session.call_tool(tool_name, arguments)
                 if getattr(result, "isError", False):
                     raise MCPError("MCP tool returned an error")

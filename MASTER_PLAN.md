@@ -166,7 +166,11 @@ noodles/
 │       │   ├── base.py
 │       │   ├── anthropic.py
 │       │   ├── openai_compatible.py
-│       │   ├── ollama.py
+│       │   ├── local_runtime.py
+│       │   ├── model_catalog.py
+│       │   ├── model_downloader.py
+│       │   ├── model_registry.py
+│       │   └── hardware_profile.py
 │       │   └── registry.py
 │       ├── tools/
 │       │   ├── registry.py
@@ -268,9 +272,9 @@ State transitions must be explicit and validated. Terminal states must not silen
 **Goal:** Establish a reliable project baseline and working rules.
 
 - [x] P0-01 Record initial repository reconnaissance in this plan.
-- [x] P0-02 Confirm V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command sandbox with automatic Docker setup after initial owner consent, and three provider families (owner-approved).
+- [x] P0-02 Confirm V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command sandbox with automatic Docker setup after initial owner consent, Anthropic/OpenAI-compatible cloud adapters, and Noodles-native local GGUF inference (no Ollama).
 - [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
-- [x] P0-04 Confirm provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API (owner-approved); model IDs and endpoint URLs remain configurable.
+- [x] P0-04 Confirm model connectivity: Anthropic Messages and OpenAI-compatible Chat Completions cloud adapters plus Noodles-managed native GGUF inference; Ollama is not a dependency or supported runtime.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
 - [ ] P0-06 Verify private vulnerability-reporting route is enabled and usable; the connected GitHub interface could not verify or enable it. Keep as a hard pre-release gate; Apache-2.0 is selected and LICENSE exists.
 - [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
@@ -667,7 +671,7 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 - **Current phase:** Phase 1 — Repository foundation and engineering standards.
 - **Current status:** Foundation scaffold is implemented. GitHub Actions run `41781764271` passed on Python 3.12 and 3.13: dependency installation, Ruff lint, Ruff format, mypy, pip-audit, and pytest. P1-02 remains open only for committing `uv.lock` and switching CI to locked resolution. P0-06 private vulnerability reporting remains unverified and is a hard pre-release gate.
 - **Next task:** Generate and commit `uv.lock`, change CI to `uv sync --locked`, rerun the matrix, then proceed to Phase 2 provider adapter contracts. Owner must separately enable/verify GitHub private vulnerability reporting before any public release.
-- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox with automatic setup after initial consent; Anthropic, OpenAI-compatible, and Ollama; Python 3.12/3.13 baseline; FastAPI/Pydantic v2; SQLite/SQLAlchemy/Alembic; uv/pytest/Ruff.
+- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox with automatic setup after initial consent; Anthropic/OpenAI-compatible cloud adapters plus Noodles-native GGUF/llama.cpp local runtime (no Ollama); Python 3.12/3.13 baseline; FastAPI/Pydantic v2; SQLite/SQLAlchemy/Alembic; uv/pytest/Ruff.
 - **Blocking decisions:** Private security-reporting route (pre-release gate); no remaining core stack decision.
 - **Latest verified implementation:** Phase 1 scaffold files in `src/noodles/`, `tests/`, `pyproject.toml`, `.github/workflows/ci.yml`, `.gitignore`, `.env.example`, README, and engineering baseline docs.
 - **Latest verified test run:** GitHub Actions run `41781764271` completed successfully for Python 3.12 and 3.13; Ruff, mypy, pip-audit, and pytest passed. Lockfile is not committed yet.
@@ -691,7 +695,7 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-009 | V1 UI | API-first; no mandatory UI; dashboard deferred | APPROVED | Owner approved |
 | DEC-010 | V1 research | Controlled web research is optional V1 capability with explicit permissions | APPROVED | Owner approved |
 | DEC-011 | Command execution | Docker-backed sandbox only; fail closed with no host-shell fallback | APPROVED | Owner approved |
-| DEC-012 | Provider families | Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API | APPROVED | Owner approved; exact model/endpoint values are configurable |
+| DEC-012 | Cloud provider families | Anthropic Messages and OpenAI-compatible Chat Completions; local model execution is a first-party Noodles-native capability under DEC-016 | SUPERSEDED for local runtime by DEC-016 | Owner revised local model requirement; cloud adapters remain approved |
 | DEC-013 | Project license | Apache License 2.0 (SPDX: Apache-2.0) | APPROVED | Owner accepted the recommended license; root LICENSE file added |
 | DEC-014 | Vulnerability reporting | Prefer GitHub private vulnerability reporting; no public disclosure of sensitive details | POLICY DOCUMENTED; CHANNEL UNVERIFIED | SECURITY.md added; the available GitHub connector cannot verify or enable the repository setting |
 | DEC-015 | Docker Auto-Setup | Automatic mode after initial owner consent: detect, diagnose, use trusted platform installation/repair, perform supported setup actions automatically, retain native OS elevation and license prompts, require renewed consent for material scope changes, verify daemon and sandbox, fail closed | APPROVED | Owner selected automatic mode; initial consent does not bypass OS security; implementation not started |

@@ -28,13 +28,6 @@ class SkillInstallRequest(BaseModel):
     content: str = Field(min_length=20, max_length=64000)
 
 
-class AgentChatRequest(BaseModel):
-    model_config = {"extra": "forbid"}
-    message: str = Field(min_length=1, max_length=20000)
-    mode: Literal["auto", "offline", "online"] = "auto"
-    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
-
-
 class MCPToolCallRequest(BaseModel):
     model_config = {"extra": "forbid"}
     arguments: dict[str, Any] = Field(default_factory=dict)
@@ -68,6 +61,13 @@ class ChatMessage(BaseModel):
 
     role: Literal["system", "user", "assistant"]
     content: str = Field(min_length=1, max_length=20000)
+
+
+class AgentChatRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    message: str = Field(min_length=1, max_length=20000)
+    mode: Literal["auto", "offline", "online"] = "auto"
+    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
 
 
 class LocalChatRequest(BaseModel):

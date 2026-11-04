@@ -142,9 +142,7 @@ class AgentOrchestrator:
         if len(plan.mcp_servers) > 5:
             raise AgentError("planner exceeded MCP server limit")
         for server_name in plan.mcp_servers:
-            if not any(
-                server_name in item.allowed_mcp_servers for item in manifests.values()
-            ):
+            if not any(server_name in item.allowed_mcp_servers for item in manifests.values()):
                 raise AgentError("MCP server not authorized by selected skill")
         if mode == "offline" and plan.mcp_servers:
             raise AgentError("MCP calls are disabled in offline mode")
@@ -155,9 +153,7 @@ class AgentOrchestrator:
             for server_name in plan.mcp_servers:
                 try:
                     tools = await self.mcp.list_tools(server_name)
-                    available_mcp_tools[server_name] = {
-                        tool["name"] for tool in tools
-                    }
+                    available_mcp_tools[server_name] = {tool["name"] for tool in tools}
                     discovered.append({"server": server_name, "tools": tools})
                 except MCPError as exc:
                     raise AgentError(
@@ -195,9 +191,7 @@ class AgentOrchestrator:
                 top_p=0.9,
             )
             try:
-                second_plan = AgentPlan.model_validate(
-                    json.loads(str(second["content"]))
-                )
+                second_plan = AgentPlan.model_validate(json.loads(str(second["content"])))
             except (ValueError, ValidationError, KeyError) as exc:
                 raise AgentError("MCP planner returned invalid JSON") from exc
 
@@ -205,12 +199,9 @@ class AgentOrchestrator:
                 if (
                     action.kind != "mcp"
                     or action.server not in plan.mcp_servers
-                    or action.tool
-                    not in available_mcp_tools.get(action.server or "", set())
+                    or action.tool not in available_mcp_tools.get(action.server or "", set())
                 ):
-                    raise AgentError(
-                        "MCP planner selected an undiscovered or unauthorized tool"
-                    )
+                    raise AgentError("MCP planner selected an undiscovered or unauthorized tool")
                 plan.actions.append(action)
 
         if len(plan.actions) > 8:
@@ -219,9 +210,7 @@ class AgentOrchestrator:
         outputs = []
         for action in plan.actions:
             if action.kind == "local":
-                allowed = any(
-                    action.tool in item.allowed_tools for item in manifests.values()
-                )
+                allowed = any(action.tool in item.allowed_tools for item in manifests.values())
                 if not allowed and action.tool not in {"system.time", "system.info"}:
                     raise AgentError("local tool not authorized by selected skill")
                 try:
@@ -231,19 +220,14 @@ class AgentOrchestrator:
                 outputs.append({"tool": action.tool, "result": result})
             elif action.kind == "mcp":
                 if mode == "offline" or not action.server:
-                    raise AgentError(
-                        "MCP is unavailable in offline mode or server is missing"
-                    )
+                    raise AgentError("MCP is unavailable in offline mode or server is missing")
                 allowed = any(
-                    action.server in item.allowed_mcp_servers
-                    for item in manifests.values()
+                    action.server in item.allowed_mcp_servers for item in manifests.values()
                 )
                 if not allowed:
                     raise AgentError("MCP server not authorized by selected skill")
                 try:
-                    result = await self.mcp.call_tool(
-                        action.server, action.tool, action.arguments
-                    )
+                    result = await self.mcp.call_tool(action.server, action.tool, action.arguments)
                 except MCPError as exc:
                     raise AgentError("authorized MCP tool call failed") from exc
                 outputs.append(result)

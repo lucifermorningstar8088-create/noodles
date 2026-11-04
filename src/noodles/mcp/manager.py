@@ -7,10 +7,11 @@ import ipaddress
 import json
 import os
 import re
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from urllib.parse import urlsplit
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -33,7 +34,7 @@ class MCPServerConfig(BaseModel):
     trusted: bool = False
 
     @model_validator(mode="after")
-    def validate_transport(self) -> "MCPServerConfig":
+    def validate_transport(self) -> MCPServerConfig:
         if self.transport == "stdio" and (not self.command or self.url):
             raise ValueError("stdio transport requires command and forbids url")
         if self.transport == "streamable-http" and (not self.url or self.command):
@@ -48,7 +49,9 @@ class MCPServerConfig(BaseModel):
             except ValueError:
                 pass
             if parsed.scheme != "https" and not (parsed.scheme == "http" and is_loopback):
-                raise ValueError("remote MCP servers must use HTTPS; HTTP is allowed only on loopback")
+                raise ValueError(
+                    "remote MCP servers must use HTTPS; HTTP is allowed only on loopback"
+                )
         if any(not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key) for key in self.env):
             raise ValueError("MCP environment keys must be valid environment variable names")
         for value in [*self.env.values(), *self.headers.values()]:
@@ -138,7 +141,7 @@ class MCPManager:
         return config.model_copy(update={"env": env, "headers": headers})
 
     @asynccontextmanager
-    async def _open_session(self, config: MCPServerConfig):
+    async def _open_session(self, config: MCPServerConfig) -> AsyncIterator[Any]:
         """Yield an initialized SDK session for one bounded operation."""
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client

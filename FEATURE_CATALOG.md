@@ -120,9 +120,9 @@
 - [ ] MOD-007 [V1] OpenAI-compatible adapter with configurable base URL.
 - [ ] MOD-008 [V1] OpenAI-compatible chat message serialization.
 - [ ] MOD-009 [V1] OpenAI-compatible tool-call and tool-result serialization.
-- [ ] MOD-010 [V1] Ollama adapter for local endpoint.
-- [ ] MOD-011 [V1] Ollama model availability and connection checks.
-- [ ] MOD-012 [V1] Ollama tool-calling capability checks per model.
+- [ ] MOD-010 [REMOVED] Ollama adapter for local endpoint. Replaced by MOD-039 through MOD-051: native Noodles-managed local model runtime; no Ollama dependency.
+- [ ] MOD-011 [REMOVED] Ollama model availability and connection checks. Replaced by Noodles model catalog, registry, and runtime health checks.
+- [ ] MOD-012 [REMOVED] Ollama tool-calling capability checks per model. Replaced by local model capability validation under MOD-051.
 - [ ] MOD-013 [V1] Provider-specific authentication headers and secret handling.
 - [ ] MOD-014 [V1] Configurable model name, base URL, temperature, top-p, max output tokens, and supported options.
 - [ ] MOD-015 [V1] Streaming token/event parsing where supported.
@@ -149,6 +149,22 @@
 - [ ] MOD-036 [POST-V1] Additional providers through adapter interface.
 - [ ] MOD-037 [POST-V1] Local model discovery and benchmark helper.
 - [ ] MOD-038 [POST-V1] Model routing based on capability, privacy, latency, and configured cost ceiling.
+- [ ] MOD-039 [V1] Native local model catalog backed by trusted Hugging Face metadata discovery.
+- [ ] MOD-040 [V1] Pin exact repository revision and GGUF file path before download.
+- [ ] MOD-041 [V1] Resumable, cancellable, size-bounded model downloads with disk-space preflight.
+- [ ] MOD-042 [V1] Validate GGUF format, file size, SHA-256 identity, upstream checksum evidence, and license/access metadata.
+- [ ] MOD-043 [V1] Local model registry with immutable artifact identity, aliases, storage paths, and restart persistence.
+- [ ] MOD-044 [V1] Model lifecycle APIs for list, download, progress, inspect, load, unload, test, and explicit delete.
+- [ ] MOD-045 [V1] Hardware profiler for OS, CPU instructions, RAM, GPU/VRAM, and disk capacity with uncertainty-aware estimates.
+- [ ] MOD-046 [V1] Noodles-managed native llama.cpp runtime installation and compatibility checks; no Ollama daemon or mandatory sidecar.
+- [ ] MOD-047 [V1] CPU-first local inference; enable GPU acceleration only after actual backend initialization and smoke test.
+- [ ] MOD-048 [V1] Model load/unload lifecycle, memory limits, cancellation, concurrency guard, and shutdown cleanup.
+- [ ] MOD-049 [V1] Safe model storage path, disk quota, partial-download cleanup, and no automatic model deletion.
+- [ ] MOD-050 [V1] License, attribution, gated access, source provenance, and user confirmation workflow.
+- [ ] MOD-051 [V1] Per-model context/tool/vision capability validation; unknown capabilities remain unknown.
+- [ ] MOD-052 [V1] Local GGUF inference contract and platform acceptance tests for each claimed OS/runtime combination.
+- [ ] MOD-053 [POST-V1] Additional local weight formats such as Safetensors/Transformers after separate runtime/security review.
+- [ ] MOD-054 [POST-V1] Local model benchmark and recommendation helper based on measured hardware/runtime results.
 
 ## 5. Tool system and tool lifecycle
 
@@ -423,7 +439,7 @@
 - [ ] CFG-006 [V1] Separate development, test, and production configurations.
 - [ ] CFG-007 [V1] Provider key configuration without committing secrets.
 - [ ] CFG-008 [V1] Support custom OpenAI-compatible base URL with HTTPS policy for remote endpoints.
-- [ ] CFG-009 [V1] Ollama host configuration with local-network policy.
+- [ ] CFG-009 [REMOVED] Ollama host configuration with local-network policy. Local model storage/runtime settings are covered by MOD-043/MOD-046 and future typed config tasks.
 - [ ] CFG-010 [V1] Configure workspace roots and exclusions.
 - [ ] CFG-011 [V1] Configure task/tool/time/resource budgets.
 - [ ] CFG-012 [V1] Configure logging level/format without exposing secrets.
@@ -527,7 +543,7 @@
 - [ ] DEP-016 [V1] Version, build metadata, and dependency inventory.
 - [ ] DEP-017 [V1] Release artifact integrity/checksum.
 - [ ] DEP-018 [V1] Rollback procedure and previous version compatibility.
-- [ ] DEP-019 [V1-OPTIONAL] Docker Compose for API + database + optional Ollama profile.
+- [ ] DEP-019 [REMOVED] Docker Compose optional Ollama profile. Local inference is managed in-process by Noodles and must not depend on Ollama.
 - [ ] DEP-020 [POST-V1] Kubernetes/managed orchestration deployment.
 - [ ] DEP-021 [POST-V1] One-click cloud deployment templates.
 
@@ -619,7 +635,7 @@ For each workflow, record test fixture, exact setup, expected events, expected f
 - [ ] WF-023 [V1] Return partial/incomplete status when a step fails.
 - [ ] WF-024 [V1] Prove final report matches actual diff and test output.
 - [ ] WF-025 [V1] Run on a clean install with no provider credentials configured.
-- [ ] WF-026 [V1] Run with Ollama only.
+- [ ] WF-026 [REMOVED] Run with Ollama only. Replaced by native local GGUF acceptance workflow: clean Noodles install, download pinned model, install native runtime, infer, unload, and verify without Ollama.
 - [ ] WF-027 [V1] Run with Anthropic only.
 - [ ] WF-028 [V1] Run with an OpenAI-compatible endpoint only.
 - [ ] WF-029 [V1] Run concurrent isolated tasks within configured limits.
@@ -655,6 +671,7 @@ For each workflow, record test fixture, exact setup, expected events, expected f
 
 | Date | ID | Type | Summary | Approval | Evidence |
 |---|---|---|---|---|---|
+| 2026-11-04 | FCHG-0003 | MODIFY | Remove Ollama as a V1 local model runtime and add MOD-039 through MOD-052 for Noodles-native GGUF model discovery, pinned downloads, integrity/license checks, registry, hardware profiling, llama.cpp runtime lifecycle, CPU/GPU inference validation, resource controls, and acceptance tests. | Owner requires local models to be pulled, installed, managed, and run directly by Noodles without Ollama | Requirements only; not implemented or tested |
 | 2026-11-04 | FCHG-0002 | ADD | Add DEV-029 through DEV-038 for automatic Docker setup after initial consent, including OS/runtime detection, diagnosis, trusted package provenance, native elevation, rootless preference, sandbox verification, fail-closed behavior, and audit events. | Owner selected automatic mode | Requirements only; not implemented or tested |
 | 2026-11-04 | FCHG-0001 | ADD | Initial exhaustive feature inventory covering UX, context, orchestration, providers, tools, coding, Git, research, policy, security, API, persistence, config, observability, reliability, testing, deployment, docs, governance, integrations, workflows, and release gates. | Requested by repository owner | Inventory file created; implementation not performed |
 

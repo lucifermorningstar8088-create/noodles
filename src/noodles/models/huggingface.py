@@ -172,7 +172,9 @@ class HuggingFaceModelService:
                 "private or gated repositories are not supported in this version"
             )
         if not metadata["license"]:
-            raise ModelDownloadError("model license is missing; cannot proceed without license metadata")
+            raise ModelDownloadError(
+                "model license is missing; cannot proceed without license metadata"
+            )
         if not accept_license:
             raise ModelDownloadError("explicit license acceptance is required before download")
         file_info = next((f for f in metadata["files"] if f["filename"] == filename), None)

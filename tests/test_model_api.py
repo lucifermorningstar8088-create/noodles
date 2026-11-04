@@ -45,9 +45,10 @@ def test_auth_token_protects_every_route(tmp_path: Path) -> None:
     )
     client = TestClient(create_app(settings))
     assert client.get("/api/v1/health").status_code == 401
-    assert client.get(
-        "/api/v1/health", headers={"Authorization": "Bearer " + "a" * 40}
-    ).status_code == 200
-    assert client.get(
-        "/api/v1/health", headers={"Authorization": "Bearer wrong"}
-    ).status_code == 401
+    assert (
+        client.get("/api/v1/health", headers={"Authorization": "Bearer " + "a" * 40}).status_code
+        == 200
+    )
+    assert (
+        client.get("/api/v1/health", headers={"Authorization": "Bearer wrong"}).status_code == 401
+    )

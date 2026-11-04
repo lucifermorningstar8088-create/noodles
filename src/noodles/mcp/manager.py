@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import json
 import os
@@ -169,7 +170,7 @@ class MCPManager:
         config = self._trusted_config(server_name)
         try:
             async with self._open_session(config) as session:
-                result = await session.list_tools()
+                result = await asyncio.wait_for(session.list_tools(), timeout=30)
                 return [
                     {
                         "server": server_name,
@@ -190,20 +191,29 @@ class MCPManager:
             raise MCPError("invalid MCP tool name")
         try:
             async with self._open_session(config) as session:
-                result = await session.call_tool(tool_name, arguments)
+                if len(json.dumps(arguments, ensure_ascii=False)) > 32_000:
+                    raise MCPError("MCP tool arguments exceed the 32 KB limit")
+                result = await asyncio.wait_for(
+                    session.call_tool(tool_name, arguments), timeout=30
+                )
                 if getattr(result, "isError", False):
                     raise MCPError("MCP tool returned an error")
                 content = []
-                for item in result.content:
+                for item in result.content[:20]:
                     if hasattr(item, "text"):
                         content.append({"type": "text", "text": item.text[:20000]})
                     else:
                         content.append({"type": type(item).__name__})
+                structured = getattr(result, "structuredContent", None)
+                if structured is not None and len(
+                    json.dumps(structured, ensure_ascii=False, default=str)
+                ) > 50000:
+                    structured = None
                 return {
                     "server": server_name,
                     "tool": tool_name,
                     "content": content,
-                    "structured_content": getattr(result, "structuredContent", None),
+                    "structured_content": structured,
                 }
         except MCPError:
             raise

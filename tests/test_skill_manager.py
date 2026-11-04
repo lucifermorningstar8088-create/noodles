@@ -4,7 +4,6 @@ import pytest
 
 from noodles.skills.manager import SkillError, SkillManager
 
-
 SKILL = """---
 name: web-research
 description: Research current topics using configured MCP tools.

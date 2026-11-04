@@ -1,6 +1,6 @@
 # Noodles — Phase 0 Architecture Baseline
 
-> Status: PARTIALLY APPROVED — local single-user deployment and multiple explicitly authorized workspaces confirmed; other owner decisions remain OPEN.
+> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, and three provider families confirmed; license and private security-reporting route remain OPEN.
 > Date: 2026-11-04
 > Applies to: v1 planning and Phase 1 foundation.
 > Rule: A proposal is not an approved decision. Do not implement an OPEN decision as though it were confirmed.
@@ -63,12 +63,12 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-002 | Language/runtime | Python 3.12+; validate supported versions in CI before pinning | PROPOSED |
 | ADR-003 | HTTP API | FastAPI + Pydantic v2; versioned /api/v1 routes | PROPOSED |
 | ADR-004 | Provider boundary | Provider-neutral message/tool/event types; provider-specific adapters | PROPOSED |
-| ADR-005 | Provider protocols | Anthropic Messages; OpenAI-compatible Chat Completions; Ollama chat API | PROPOSED |
+| ADR-005 | Provider protocols | Anthropic Messages; OpenAI-compatible Chat Completions; Ollama chat API; model and endpoint configured per provider | APPROVED |
 | ADR-006 | Persistence | SQLite for local single-user; PostgreSQL only if hosted concurrency/multi-user requires it | APPROVED for initial local mode |
 | ADR-007 | Data access | SQLAlchemy 2.x + Alembic migrations, subject to dependency validation | PROPOSED |
 | ADR-008 | Workspace security | Explicit workspace roots; canonical path checks; deny by default | REQUIRED PRINCIPLE |
-| ADR-009 | Command execution | Isolated runner only; fail closed if sandbox is unavailable | REQUIRED PRINCIPLE |
-| ADR-010 | UI | No mandatory UI in v1; API and OpenAPI docs first | PROPOSED |
+| ADR-009 | Command execution | Docker-backed isolated runner only for V1; command execution disabled if Docker or required isolation is unavailable; no host-shell fallback | APPROVED |
+| ADR-010 | UI | No mandatory UI in V1; API and OpenAPI docs first; dashboard deferred | APPROVED |
 | ADR-011 | Deployment | Local PC, single-user first; Docker/hosted deployment is a later optional target | APPROVED for initial target |
 | ADR-012 | User model | Local single-user first; remote exposure disabled until auth/TLS/rate limits are configured | APPROVED |
 | ADR-013 | Release numbering | Semantic Versioning; pre-1.0 breaking changes documented | PROPOSED |
@@ -220,22 +220,27 @@ No API keys, account identifiers, or private credentials are requested in this d
 |---|---|---|
 | OWN-001 | Deployment = local | Local PC, single-user first; API loopback-only by default; no remote exposure in initial configuration |
 | OWN-002 | Workspace model = multiple | Multiple explicitly registered and authorized workspace roots; no arbitrary path access; per-workspace permissions and containment checks |
+| OWN-003 | V1 UI = API-first | No mandatory graphical UI in V1; API and OpenAPI docs are the initial interface; dashboard deferred |
+| OWN-004 | V1 research = optional | Controlled web research/retrieval is an optional V1 capability behind explicit tool permissions and source/evidence handling |
+| OWN-005 | V1 command execution = Docker sandbox only | Commands run only inside a verified Docker isolation boundary; disable command execution if Docker/isolation is unavailable; never fall back to unrestricted host execution |
+| OWN-006 | V1 providers = three families | Support Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat APIs; exact model IDs and endpoint URLs remain runtime configuration |
 
 ## 14. Phase 0 exit checklist
 
 - [x] P0-01 Initial repository reconnaissance recorded (historical baseline; re-check before implementation).
-- [ ] P0-02 Owner confirms product requirements and v1 scope.
+- [x] P0-02 Owner confirms V1 scope: API-first/no mandatory UI; optional controlled research; Docker-only fail-closed command sandbox; single-agent runtime and three provider families.
 - [x] P0-03 Owner confirms deployment target and user model: local PC, single-user.
-- [ ] P0-04 Owner confirms provider endpoint/model requirements.
+- [x] P0-04 Owner confirms provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API. Exact model IDs and endpoint URLs are configuration values, not fixed product decisions.
 - [x] P0-05 Proposed architecture and unresolved risks documented.
 - [ ] P0-06 Owner confirms license and private security-reporting route; release policy proposal reviewed.
 - [x] P0-07 Owner confirms multiple explicitly authorized workspace roots.
 
-Phase 0 status: IN_PROGRESS. Local single-user deployment and multiple authorized workspaces are confirmed. Product scope, provider requirements, license, and security-reporting route remain open. Phase 1 implementation should wait until the remaining minimum architecture choices are confirmed.
+Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. License selection and the private security-reporting route remain open and must be resolved before public release. Exact model IDs and endpoint URLs are runtime configuration. Phase 1 may begin after the owner closes the remaining minimum architecture decision or explicitly accepts it as a pre-release gate.
 
 ## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
+| 2026-11-04 | ADRSET-0003 | Record owner-approved V1 scope: API-first, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families | APPROVED; documentation only |
 | 2026-11-04 | ADRSET-0002 | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces | APPROVED; documentation only |
 | 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |

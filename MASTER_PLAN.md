@@ -245,7 +245,8 @@ State transitions must be explicit and validated. Terminal states must not silen
 - [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
 - [ ] P0-04 Confirm provider API requirements, endpoint formats, and expected Ollama usage.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
-- [ ] P0-06 Confirm license and private security-reporting route; review proposed versioning/release policy.\n- [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
+- [ ] P0-06 Confirm license and private security-reporting route; review proposed versioning/release policy.
+- [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
 
 **Exit gate:** Scope, deployment assumptions, and key architecture decisions are documented and owner-dependent decisions are confirmed. No implementation is considered complete in this phase. See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) for the current proposal and open decisions.
 
@@ -559,6 +560,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0006 | MODIFY | Record owner-approved V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families; close P0-02 and P0-04. | Scope, provider contract, command security, progress dashboard, decision log | Owner approved in chat | MASTER_PLAN.md and PHASE_0_BASELINE.md updated; documentation only; no code/tests executed |
 | 2026-11-04 | CHG-0005 | ADD | Expand multi-workspace requirements with 12 stable feature IDs COD-033 through COD-044, covering registration, identity, validation, isolation, selection, permissions, revocation, concurrency, audit, and adversarial tests. | Translate confirmed multiple-workspace decision into testable requirements | Owner confirmed Workspace=multiple | FEATURE_CATALOG.md updated; requirements only; not implemented or tested |
 | 2026-11-04 | CHG-0004 | MODIFY | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces; update Phase 0 status and decision log. | Reflect explicit owner decisions in architecture baseline | User confirmed Deployment=local and Workspace=multiple | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; documentation only; no code implementation |
 | 2026-11-04 | CHG-0003 | ADD | Add Phase 0 architecture baseline, proposed deployment/provider/security/persistence decisions, open owner questions, and risk register. | Convert broad plan into explicit reviewable decisions | Requested by repository owner to start Phase 0 | PHASE_0_BASELINE.md created; proposals documented; no application code implemented |
@@ -622,7 +624,9 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-003 | Local persistence | SQLite for local single-user mode | APPROVED for initial deployment | Low operational overhead; deployment choice confirmed by owner |
 | DEC-004 | Production persistence | PostgreSQL if hosted concurrency/multi-user is later approved | DEFERRED | Not needed for confirmed local single-user first deployment |
 | DEC-005 | Agent architecture | One bounded agent runtime first | PROPOSED | Easier to audit and verify than early multi-agent orchestration |
-| DEC-006 | Execution security | Workspace allowlist + isolated command runner + fail-closed policy | REQUIRED PRINCIPLE | Prevent host compromise and unsafe fallback |\n| DEC-007 | Initial deployment | Local PC, single-user; API loopback-only by default | APPROVED | Explicitly confirmed by owner |\n| DEC-008 | Workspace model | Multiple explicitly authorized roots; no arbitrary filesystem paths | APPROVED | Explicitly confirmed by owner; each root needs independent validation and permissions |
+| DEC-006 | Execution security | Workspace allowlist + isolated command runner + fail-closed policy | REQUIRED PRINCIPLE | Prevent host compromise and unsafe fallback |
+| DEC-007 | Initial deployment | Local PC, single-user; API loopback-only by default | APPROVED | Explicitly confirmed by owner |
+| DEC-008 | Workspace model | Multiple explicitly authorized roots; no arbitrary filesystem paths | APPROVED | Explicitly confirmed by owner; each root needs independent validation and permissions |
 
 ---
 

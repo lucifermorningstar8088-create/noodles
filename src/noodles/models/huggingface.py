@@ -43,7 +43,7 @@ def _safe_repo(repo: str) -> str:
 
 def _safe_filename(filename: str) -> str:
     path = PurePosixPath(filename)
-    if (path.is_absolute() or ".." in path.parts or "\\\\" in filename
+    if (path.is_absolute() or ".." in path.parts or chr(92) in filename or chr(0) in filename
             or not filename.lower().endswith(".gguf")):
         raise ModelDownloadError("filename must be a safe relative GGUF path")
     return filename
@@ -155,7 +155,14 @@ class HuggingFaceModelService:
         free_bytes = shutil.disk_usage(self.storage_dir).free
         if free_bytes < expected_size + 128 * 1024 * 1024:
             raise ModelDownloadError("insufficient disk space; 128 MiB safety reserve is required")
-        target_dir = (self.storage_dir / model_id).resolve()
+        target_candidate = self.storage_dir / model_id
+        if target_candidate.is_symlink():
+            raise ModelDownloadError("model storage directory cannot be a symbolic link")
+        target_dir = target_candidate.resolve()
+        try:
+            target_dir.relative_to(self.storage_dir)
+        except ValueError as exc:
+            raise ModelDownloadError("model storage directory escaped the configured root") from exc
         target_dir.mkdir(parents=True, exist_ok=True)
         target = (target_dir / Path(*PurePosixPath(filename).parts)).resolve()
         try:
@@ -163,6 +170,8 @@ class HuggingFaceModelService:
         except ValueError as exc:
             raise ModelDownloadError("resolved model path escaped its storage directory") from exc
         target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() or target.is_symlink():
+            raise ModelDownloadError("target model file already exists; refusing to overwrite")
         partial = target.with_name(target.name + ".part")
         url = f"https://huggingface.co/{quote(repository, safe='/')}/resolve/{metadata['revision']}/{quote(filename, safe='/')}?download=true"
         digest = hashlib.sha256()
@@ -203,8 +212,10 @@ class HuggingFaceModelService:
                         response.raise_for_status()
                         raise ModelDownloadError(f"unexpected download status: {response.status_code}")
                     content_range = response.headers.get("content-range")
-                    if mode == "ab" and (not content_range or not content_range.startswith(f"bytes {downloaded}-")):
-                        raise ModelDownloadError("server returned an invalid range response")
+                    if mode == "ab":
+                        match = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+)", content_range or "")
+                        if not match or int(match.group(1)) != downloaded or int(match.group(3)) != expected_size:
+                            raise ModelDownloadError("server returned an invalid range response")
                     with partial.open(mode) as handle:
                         for chunk in response.iter_bytes(1024 * 1024):
                             if not chunk:
@@ -228,8 +239,6 @@ class HuggingFaceModelService:
         with partial.open("rb") as handle:
             if handle.read(4) != b"GGUF":
                 raise ModelDownloadError("downloaded file does not have a GGUF signature")
-        if target.exists() or target.is_symlink():
-            raise ModelDownloadError("target model file already exists; refusing to overwrite")
         os.replace(partial, target)
         source_url = f"https://huggingface.co/{repository}/resolve/{metadata['revision']}/{quote(filename, safe='/')}"
         manifest = ModelManifest(

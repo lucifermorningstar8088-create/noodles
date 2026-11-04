@@ -7,7 +7,7 @@ artifact size, and license before the user can explicitly request a download.
 
 from __future__ import annotations
 
-from typing import Final, TypedDict
+from typing import Final, TypedDict, cast
 
 
 class ModelSearchPreset(TypedDict):
@@ -73,4 +73,4 @@ MODEL_SEARCH_PRESETS: Final[tuple[ModelSearchPreset, ...]] = (
 
 def recommendation_payload() -> list[ModelSearchPreset]:
     """Return independent dictionaries in stable, smallest-first order."""
-    return [dict(item) for item in MODEL_SEARCH_PRESETS]
+    return [cast(ModelSearchPreset, item.copy()) for item in MODEL_SEARCH_PRESETS]

@@ -1,6 +1,6 @@
 # Noodles — Phase 0 Architecture Baseline
 
-> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, three provider families, and Apache-2.0 license confirmed; private vulnerability-reporting activation remains OPEN; automatic Docker Auto-Setup after initial owner consent is owner-approved for the runtime design.
+> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, Anthropic/OpenAI-compatible cloud adapters plus Noodles-managed native GGUF inference without Ollama, and Apache-2.0 license confirmed; private vulnerability-reporting activation remains OPEN; automatic Docker Auto-Setup after initial owner consent is owner-approved for the runtime design.
 > Date: 2026-11-04
 > Applies to: v1 planning and Phase 1 foundation.
 > Rule: A proposal is not an approved decision. Do not implement an OPEN decision as though it were confirmed.
@@ -23,7 +23,7 @@ Deliverables:
 
 Noodles v1 is a single-agent, API-first AI agent runtime for coding and controlled general-purpose digital tasks.
 
-It must understand the requested outcome and constraints; produce a finite plan before consequential execution; use only registered tools with validated schemas and permissions; execute bounded actions; observe and record actual tool results; verify changes; report completed, failed, blocked, and unverified work separately; preserve task/event history; support safe cancellation; and support Anthropic, OpenAI-compatible endpoints, and Ollama through separate adapters.
+It must understand the requested outcome and constraints; produce a finite plan before consequential execution; use only registered tools with validated schemas and permissions; execute bounded actions; observe and record actual tool results; verify changes; report completed, failed, blocked, and unverified work separately; preserve task/event history; support safe cancellation; and support Anthropic/OpenAI-compatible cloud endpoints plus Noodles-managed native local GGUF inference without an Ollama dependency.
 
 It is not a thin chat wrapper, unrestricted computer-control agent, or autonomous multi-agent swarm in v1.
 
@@ -34,7 +34,7 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 - One agent runtime with explicit task state machine.
 - Anthropic Messages API adapter.
 - OpenAI-compatible Chat Completions adapter with configurable base URL and model.
-- Ollama chat API adapter.
+- Noodles-managed GGUF local model lifecycle and native llama.cpp inference; no Ollama service or dependency.
 - Provider capability declarations and adapter contract tests.
 - Tool registry, JSON-schema validation, policy checks, budgets, cancellation, and event records.
 - Workspace-scoped file operations.
@@ -63,7 +63,7 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-002 | Language/runtime | CPython >=3.12,<3.14; CI matrix 3.12 and 3.13; defer 3.14 until dependency/platform CI proves compatibility | APPROVED |
 | ADR-003 | HTTP API | FastAPI + Pydantic v2 + pydantic-settings; versioned /api/v1 routes; Uvicorn ASGI server; loopback bind by default | APPROVED |
 | ADR-004 | Provider boundary | Provider-neutral message/tool/event types; provider-specific adapters | PROPOSED |
-| ADR-005 | Provider protocols | Anthropic Messages; OpenAI-compatible Chat Completions; Ollama chat API; model and endpoint configured per provider | APPROVED |
+| ADR-005 | Provider protocols | Anthropic Messages and OpenAI-compatible Chat Completions cloud adapters; first-party Noodles-managed GGUF local inference via native llama.cpp integration; no Ollama runtime/service | APPROVED |
 | ADR-006 | Persistence | SQLite for local single-user; PostgreSQL only if hosted concurrency/multi-user requires it | APPROVED for initial local mode |
 | ADR-007 | Data access | SQLAlchemy 2.x + Alembic migrations; SQLite for local single-user V1; async database access only where it materially benefits the API | APPROVED |
 | ADR-008 | Workspace security | Explicit workspace roots; canonical path checks; deny by default | REQUIRED PRINCIPLE |
@@ -77,6 +77,7 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
 | ADR-017 | Docker lifecycle | Automatic Docker Auto-Setup after initial owner consent: detect, diagnose, use supported trusted install/repair channels, automatically perform supported setup actions, retain native OS elevation/license prompts, renew consent for material scope changes, then verify daemon and sandbox; execution remains disabled until verification passes | APPROVED |
 | ADR-018 | Engineering toolchain | CPython 3.12/3.13; FastAPI, Pydantic v2, pydantic-settings, Uvicorn; SQLite + SQLAlchemy 2.x + Alembic; uv for environment/lock management; pytest + Ruff; bounded dependency ranges and committed lockfile before reproducible release | APPROVED |
+| ADR-019 | Native local model runtime | Noodles manages GGUF catalog discovery, exact revision/file download, integrity/license metadata, model registry, hardware profiling, native llama.cpp runtime installation/lifecycle, CPU-first inference, and validated optional GPU acceleration. No Ollama service, API, or external model server. Cloud adapters remain Anthropic and OpenAI-compatible. | APPROVED |
 
 ## 5. Deployment and user-model proposal
 
@@ -253,29 +254,31 @@ No API keys, account identifiers, or private credentials are requested in this d
 | OWN-003 | V1 UI = API-first | No mandatory graphical UI in V1; API and OpenAPI docs are the initial interface; dashboard deferred |
 | OWN-004 | V1 research = optional | Controlled web research/retrieval is an optional V1 capability behind explicit tool permissions and source/evidence handling |
 | OWN-005 | V1 command execution = Docker sandbox only | Commands run only inside a verified Docker isolation boundary; disable command execution if Docker/isolation is unavailable; never fall back to unrestricted host execution |
-| OWN-006 | V1 providers = three families | Support Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat APIs; exact model IDs and endpoint URLs remain runtime configuration |
+| OWN-006 | V1 model connectivity | Support Anthropic Messages and OpenAI-compatible Chat Completions cloud APIs; local GGUF models are managed and run directly by Noodles via native llama.cpp integration; Ollama is not supported or required |
 | OWN-007 | Project license = Apache-2.0 | Apache License 2.0 selected; root LICENSE file added; SPDX identifier is Apache-2.0 |
 | OWN-008 | Security disclosure policy | SECURITY.md instructs reporters not to disclose sensitive details publicly and prefers GitHub private vulnerability reporting; actual feature activation remains unverified |
 | OWN-009 | Docker Auto-Setup mode = automatic after initial consent | Noodles detects and diagnoses Docker problems, then automatically performs supported setup/repair steps within a consented scope; native OS elevation/license prompts remain mandatory; material plan changes require renewed consent; daemon and sandbox must verify before command execution is enabled |
 | OWN-010 | Phase 1 may proceed with P0-06 as a pre-release gate | Private vulnerability reporting is not verified by the available GitHub connection. Phase 1 engineering may proceed, but no public release, public beta, or sensitive vulnerability intake is allowed until a verified private channel is active. P0-06 remains open. |
+| OWN-011 | Local model runtime = native Noodles-managed | Noodles must independently discover/select, download, verify, register, install/configure its native inference runtime, load/unload, and run local GGUF models directly. Ollama is not a dependency, service, or runtime. CPU is the baseline; GPU acceleration is enabled only after actual backend validation. |
 
 ## 14. Phase 0 exit checklist
 
 - [x] P0-01 Initial repository reconnaissance recorded (historical baseline; re-check before implementation).
 - [x] P0-02 Owner confirms V1 scope: API-first/no mandatory UI; optional controlled research; Docker-only fail-closed command sandbox; single-agent runtime and three provider families.
 - [x] P0-03 Owner confirms deployment target and user model: local PC, single-user.
-- [x] P0-04 Owner confirms provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API. Exact model IDs and endpoint URLs are configuration values, not fixed product decisions.
+- [x] P0-04 Owner confirms model connectivity: Anthropic Messages and OpenAI-compatible Chat Completions cloud adapters, plus Noodles-managed native GGUF local inference; no Ollama dependency.
 - [x] P0-05 Proposed architecture and unresolved risks documented.
 - [ ] P0-06 Verify GitHub private vulnerability reporting is enabled and usable; Apache-2.0 license selected and LICENSE added. Review release policy before public release.
 - [x] P0-07 Owner confirms multiple explicitly authorized workspace roots.
 - [x] P0-08 Owner selects automatic Docker Auto-Setup after initial consent; architecture and security boundaries documented (documentation decision only, not implemented).
 
-Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded and automatic Docker Auto-Setup after initial owner consent approved. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Owner accepts Phase 1 to proceed while P0-06 remains an explicit pre-release gate; this does not close or waive P0-06.
+Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded and automatic Docker Auto-Setup after initial owner consent approved. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and cloud Anthropic/OpenAI-compatible adapters plus Noodles-managed native GGUF inference without Ollama are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Owner accepts Phase 1 to proceed while P0-06 remains an explicit pre-release gate; this does not close or waive P0-06.
 
 ## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
+| 2026-11-04 | ADRSET-0008 | Replace the previously approved Ollama local provider with a first-party Noodles-managed GGUF model lifecycle and native llama.cpp inference; keep Anthropic/OpenAI-compatible cloud adapters; CPU-first and validated optional GPU acceleration | OWNER APPROVED; architecture only, no runtime implementation |
 | 2026-11-04 | ADRSET-0007 | Approve Python 3.12/3.13, FastAPI/Pydantic v2, pydantic-settings, Uvicorn, SQLite/SQLAlchemy 2.x/Alembic, uv, pytest, and Ruff; accept P0-06 as a hard pre-release gate so Phase 1 can proceed | OWNER APPROVED BY 'KARO'; private reporting remains unverified; no public release permitted until resolved |
 | 2026-11-04 | ADRSET-0006 | Change Docker Auto-Setup from guided to automatic after initial owner consent; preserve native elevation/license prompts, renewed consent for material plan changes, trusted-source constraints, verification, and fail-closed behavior | OWNER APPROVED; documentation only; no installer or runtime code implemented |
 | 2026-11-04 | ADRSET-0005 | Approve guided Docker Auto-Setup: read-only detection, diagnosis, OS-specific trusted setup plan, explicit approval before system changes, post-install daemon/sandbox verification, and fail-closed activation | SUPERSEDED BY ADRSET-0006; documentation only; no installer or runtime code implemented |

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import re
+from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlsplit
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -34,12 +37,17 @@ class MCPServerConfig(BaseModel):
             raise ValueError("stdio transport requires command and forbids url")
         if self.transport == "streamable-http" and (not self.url or self.command):
             raise ValueError("streamable-http requires url and forbids command")
-        if self.url and not (
-            self.url.startswith("https://")
-            or self.url.startswith("http://127.0.0.1")
-            or self.url.startswith("http://localhost")
-        ):
-            raise ValueError("remote MCP servers must use HTTPS; HTTP is allowed only on loopback")
+        if self.url:
+            parsed = urlsplit(self.url)
+            if parsed.username or parsed.password or not parsed.hostname:
+                raise ValueError("MCP URL must not contain credentials and must include a hostname")
+            is_loopback = parsed.hostname == "localhost"
+            try:
+                is_loopback = is_loopback or ipaddress.ip_address(parsed.hostname).is_loopback
+            except ValueError:
+                pass
+            if parsed.scheme != "https" and not (parsed.scheme == "http" and is_loopback):
+                raise ValueError("remote MCP servers must use HTTPS; HTTP is allowed only on loopback")
         if any(not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key) for key in self.env):
             raise ValueError("MCP environment keys must be valid environment variable names")
         for value in [*self.env.values(), *self.headers.values()]:
@@ -124,6 +132,7 @@ class MCPManager:
             headers[key] = os.environ[ref]
         return config.model_copy(update={"env": env, "headers": headers})
 
+    @asynccontextmanager
     async def _open_session(self, config: MCPServerConfig):
         """Yield an initialized SDK session for one bounded operation."""
         from mcp import ClientSession, StdioServerParameters

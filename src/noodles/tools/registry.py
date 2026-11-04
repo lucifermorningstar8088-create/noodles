@@ -16,9 +16,15 @@ class LocalToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, tuple[str, Callable[[dict[str, Any]], Any]]] = {}
         self.register("system.time", "Return the local machine's current UTC time.", self._time)
-        self.register("system.info", "Return basic local runtime platform information.", self._system_info)
+        self.register(
+            "system.info",
+            "Return basic local runtime platform information.",
+            self._system_info,
+        )
 
-    def register(self, name: str, description: str, handler: Callable[[dict[str, Any]], Any]) -> None:
+    def register(
+        self, name: str, description: str, handler: Callable[[dict[str, Any]], Any]
+    ) -> None:
         if name in self._tools:
             raise ValueError(f"local tool already registered: {name}")
         self._tools[name] = (description, handler)

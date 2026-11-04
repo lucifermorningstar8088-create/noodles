@@ -1,6 +1,5 @@
 import hashlib
 from pathlib import Path
-from typing import Any
 
 import httpx
 import pytest
@@ -120,7 +119,6 @@ def test_download_rejects_lfs_hash_mismatch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = make_service(tmp_path, monkeypatch)
-    service.max_download_bytes = 1024 * 1024
 
     def bad_hash_handler(request: httpx.Request) -> httpx.Response:
         if "/revision/" in request.url.path:

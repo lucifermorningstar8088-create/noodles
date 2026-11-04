@@ -4,7 +4,7 @@
 >
 > **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution with automatic Docker Auto-Setup after initial owner consent, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.8.0
+> **Plan version:** 1.9.0
 > **Default branch:** `main`
 
 ---
@@ -284,18 +284,18 @@ State transitions must be explicit and validated. Terminal states must not silen
 
 **Approved baseline:** See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) ADR-002/003/006/007/018. P0-06 remains a hard pre-release gate; Phase 1 may proceed.
 
-- [ ] P1-01 Create package structure under `src/noodles/`.
-- [ ] P1-02 Add `pyproject.toml` with pinned/ranged dependencies and dev extras.
-- [ ] P1-03 Configure formatter, linter, type checking, and import rules.
-- [ ] P1-04 Configure pytest and test directory conventions.
-- [ ] P1-05 Add secure `.gitignore` and sanitized `.env.example`.
-- [ ] P1-06 Add structured logging with secret redaction.
-- [ ] P1-07 Add configuration validation and safe startup errors.
-- [ ] P1-08 Add minimal FastAPI app and health/readiness endpoints.
-- [ ] P1-09 Add CI workflow for lint, type checks, tests, and dependency checks.
-- [ ] P1-10 Write local setup and first-run documentation.
+- [x] P1-01 Create package structure under `src/noodles/`.
+- [ ] P1-02 Add `pyproject.toml` with bounded dependencies/dev extras and commit `uv.lock`; switch CI to locked installs before claiming reproducible dependency resolution.
+- [x] P1-03 Configure Ruff lint/format, mypy type checking, and import rules.
+- [x] P1-04 Configure pytest and test directory conventions.
+- [x] P1-05 Add secure `.gitignore` and sanitized `.env.example`.
+- [x] P1-06 Add structured JSON logging with common-secret redaction and tests.
+- [x] P1-07 Add configuration validation and loopback-only startup defaults.
+- [x] P1-08 Add minimal FastAPI app and health/readiness endpoints.
+- [x] P1-09 Add CI workflow for lint, type checks, tests, and dependency vulnerability audit.
+- [x] P1-10 Write local setup and first-run documentation.
 
-**Exit gate:** Fresh environment can install the project, start the API, and run the baseline test suite. CI passes.
+**Exit gate:** Fresh environment can install the project, start the API, and run the baseline test suite. CI passes. Current CI passed on Python 3.12 and 3.13, including Ruff, mypy, pip-audit, and pytest. Phase 1 remains IN_PROGRESS until the generated `uv.lock` is committed and CI uses `uv sync --locked`.
 
 ### Phase 2 — Core agent runtime (provider-independent)
 
@@ -610,6 +610,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0011 | IMPLEMENT / FOUNDATION | Add Phase 1 Python package scaffold, validated loopback-only settings, JSON logging with redaction, FastAPI health/readiness routes, tests, CI, dependency audit, and setup documentation. CI run 41781764271 passed on Python 3.12 and 3.13. Keep P1-02 open for committed uv.lock/locked CI; keep P0-06 as pre-release gate. | P1-01, P1-03 through P1-10; src/noodles, tests, pyproject, CI, README/docs | Approved Phase 1 start after owner accepted P0-06 as a pre-release gate | Code and tests committed; CI verified; uv.lock not committed; no provider, DB, Docker, or workspace runtime implementation |
 | 2026-11-04 | CHG-0010 | APPROVE / FOUNDATION | Approve CPython 3.12/3.13, FastAPI + Pydantic v2 + pydantic-settings + Uvicorn, SQLite + SQLAlchemy 2.x + Alembic, uv, pytest, and Ruff; allow Phase 1 to proceed while private vulnerability reporting remains a hard pre-release gate. | Phase 0 baseline, Phase 1 engineering baseline, release gate | Owner said 'karo' to proceed with the next step | Documentation decision recorded; no code/test evidence implied by this row |
 | 2026-11-04 | CHG-0009 | MODIFY / SECURITY | Change Docker Auto-Setup from guided to automatic after initial owner consent. Noodles may automatically execute supported setup steps after consent while preserving native OS elevation, license prompts, re-consent for material scope changes, trusted sources, auditability, verification, and fail-closed behavior. Documentation only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security controls, feature catalog, decision log | Owner explicitly selected automatic mode | Documentation update only; no installer/runtime code or tests executed |
 | 2026-11-04 | CHG-0008 | MODIFY / SECURITY | Approve guided Docker Auto-Setup mode and add the Docker Environment Manager architecture, approval model, trusted installer constraints, verification gates, failure behavior, roadmap tasks, security controls, and acceptance tests. This is a documentation/decision update only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security checklist, acceptance catalogue, decision log | Owner explicitly selected guided mode | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; no application code/tests executed; private vulnerability-reporting route remains unverified |
@@ -649,21 +650,21 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 |---|---:|
 | Phases defined | 10 (Phase 0–9) |
 | Detailed feature inventory | Added in FEATURE_CATALOG.md |
-| Implementation tasks checked complete | 0 |
-| Implementation tasks pending | All except baseline record P0-01 |
-| Security controls verified | 0 |
-| Acceptance tests executed | 0 |
+| Implementation tasks checked complete | 9 (P1-01, P1-03 to P1-10) |
+| Implementation tasks pending | P1-02 lockfile plus later roadmap tasks |
+| Baseline security checks | Loopback binding, log redaction, dependency audit pass in CI; Docker sandbox not implemented |
+| Acceptance tests executed | CI test suite passed on Python 3.12 and 3.13 |
 | Release | Not started |
 
 ### Current position
 
-- **Current phase:** Phase 0 — Project governance and baseline.
-- **Current status:** Engineering baseline approved; Phase 1 foundation work may proceed. P0-06 (private vulnerability reporting) remains unverified and is a hard pre-release gate. Phase 1 scaffold implementation is beginning; no successful build/test claim until CI evidence exists.
-- **Next task:** Implement and verify Phase 1 foundation: package structure, pyproject, config, logging, FastAPI health/readiness endpoints, tests, CI, and setup docs. Separately, owner must enable/verify GitHub private vulnerability reporting before any public release.
+- **Current phase:** Phase 1 — Repository foundation and engineering standards.
+- **Current status:** Foundation scaffold is implemented. GitHub Actions run `41781764271` passed on Python 3.12 and 3.13: dependency installation, Ruff lint, Ruff format, mypy, pip-audit, and pytest. P1-02 remains open only for committing `uv.lock` and switching CI to locked resolution. P0-06 private vulnerability reporting remains unverified and is a hard pre-release gate.
+- **Next task:** Generate and commit `uv.lock`, change CI to `uv sync --locked`, rerun the matrix, then proceed to Phase 2 provider adapter contracts. Owner must separately enable/verify GitHub private vulnerability reporting before any public release.
 - **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox with automatic setup after initial consent; Anthropic, OpenAI-compatible, and Ollama; Python 3.12/3.13 baseline; FastAPI/Pydantic v2; SQLite/SQLAlchemy/Alembic; uv/pytest/Ruff.
-- **Blocking decisions:** Private security-reporting route and release-policy review; Python/FastAPI baseline confirmation before dependency lock-in.
-- **Latest verified implementation:** None.
-- **Latest verified test run:** None.
+- **Blocking decisions:** Private security-reporting route (pre-release gate); no remaining core stack decision.
+- **Latest verified implementation:** Phase 1 scaffold files in `src/noodles/`, `tests/`, `pyproject.toml`, `.github/workflows/ci.yml`, `.gitignore`, `.env.example`, README, and engineering baseline docs.
+- **Latest verified test run:** GitHub Actions run `41781764271` completed successfully for Python 3.12 and 3.13; Ruff, mypy, pip-audit, and pytest passed. Lockfile is not committed yet.
 
 ---
 

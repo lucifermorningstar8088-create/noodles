@@ -33,7 +33,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     model_registry = ModelRegistry(runtime_settings.model_storage_dir)
     model_runtime = NativeModelRuntime()
     model_service = HuggingFaceModelService(
-        runtime_settings.model_storage_dir, model_registry, runtime_settings.model_max_download_bytes
+        runtime_settings.model_storage_dir,
+        model_registry,
+        runtime_settings.model_max_download_bytes,
     )
     search_service = (
         SearXNGSearchService(
@@ -63,7 +65,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             return {"models": model_service.search(q, limit)}
         except httpx.HTTPError as exc:
-            raise HTTPException(status_code=502, detail="Hugging Face catalog request failed") from exc
+            raise HTTPException(
+                status_code=502, detail="Hugging Face catalog request failed"
+            ) from exc
         except ModelDownloadError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -76,7 +80,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             return model_service.inspect(repository, revision)
         except httpx.HTTPError as exc:
-            raise HTTPException(status_code=502, detail="Hugging Face metadata request failed") from exc
+            raise HTTPException(
+                status_code=502, detail="Hugging Face metadata request failed"
+            ) from exc
         except ModelDownloadError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -88,7 +94,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 request.repository, request.revision, request.filename, request.model_id,
                 accept_license=request.accept_license,
             )
-            return {"status": "installed", "model": manifest.model_dump(mode="json")}
+            return {
+                "status": "installed",
+                "model": manifest.model_dump(mode="json"),
+            }
         except httpx.HTTPError as exc:
             raise HTTPException(status_code=502, detail="Hugging Face model transfer failed") from exc
         except ModelDownloadError as exc:
@@ -120,7 +129,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ) -> dict[str, Any]:
         """Search through the explicitly configured SearXNG instance."""
         if not runtime_settings.web_search_enabled:
-            raise HTTPException(status_code=503, detail="Web search is disabled by configuration")
+            raise HTTPException(
+                status_code=503, detail="Web search is disabled by configuration"
+            )
         if search_service is None:
             raise HTTPException(status_code=503, detail="Set NOODLES_SEARXNG_URL to enable web search")
         try:

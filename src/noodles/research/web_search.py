@@ -23,7 +23,9 @@ def validate_searxng_url(value: str) -> str:
         or parsed.query
         or parsed.fragment
     ):
-        raise ValueError("searxng_url must be an HTTP(S) base URL without credentials, query, or fragment")
+        raise ValueError(
+            "searxng_url must be an HTTP(S) base URL without credentials, query, or fragment"
+        )
     if parsed.port is not None and not 1 <= parsed.port <= 65535:
         raise ValueError("searxng_url contains an invalid port")
     path = parsed.path.rstrip("/")
@@ -41,7 +43,10 @@ class SearXNGSearchService:
         return httpx.Client(
             timeout=httpx.Timeout(self.timeout_seconds, connect=4.0),
             follow_redirects=False,
-            headers={"User-Agent": "Noodles/0.1 (+local research client)", "Accept": "application/json"},
+            headers={
+                "User-Agent": "Noodles/0.1 (+local research client)",
+                "Accept": "application/json",
+            },
         )
 
     def search(
@@ -102,7 +107,9 @@ class SearXNGSearchService:
             parsed = urlsplit(raw_url)
             if parsed.scheme not in {"http", "https"} or not parsed.hostname:
                 continue
-            canonical = urlunsplit((parsed.scheme, parsed.netloc.lower(), parsed.path or "/", parsed.query, ""))
+            canonical = urlunsplit(
+                (parsed.scheme, parsed.netloc.lower(), parsed.path or "/", parsed.query, "")
+            )
             if canonical in seen:
                 continue
             seen.add(canonical)

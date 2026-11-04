@@ -58,7 +58,7 @@ def test_registry_persists_only_secret_references(tmp_path: Path) -> None:
     stored = path.read_text(encoding="utf-8")
     assert "TAVILY_MCP_TOKEN" in stored
     assert "secret-value" not in stored
-    assert "Authorization" not in str(registry.list())
+    assert "secret-value" not in str(registry.list())
 
 
 def test_untrusted_server_cannot_connect(tmp_path: Path) -> None:

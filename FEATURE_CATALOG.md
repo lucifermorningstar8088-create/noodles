@@ -662,9 +662,11 @@ First implementation slice committed on 2026-11-04:
 - Implemented: atomic single-process JSON registry; register verifies model root containment, non-symlink regular file, byte size, GGUF magic, and SHA-256. Registry removal does not delete model files.
 - Implemented: CPU/RAM/disk inventory. GPU remains explicitly `not_probed`.
 - Implemented: lazy llama.cpp binding detection and a guarded single-model load/unload wrapper. Importing the binding is not treated as proof of an initialized backend.
-- Implemented: read-only API endpoints for installed models, hardware, and runtime status.
-- Added unit/API tests, but no CI result for this new code is yet verified.
-- Not implemented: Hugging Face catalog/tree client, pinned download manager, resumable downloads, license/gated-model workflow, automatic runtime installation, inference endpoint/worker, GPU validation, or end-to-end acceptance tests.
+- Implemented: read APIs for installed models, hardware, and runtime status.
+- Implemented: public Hugging Face GGUF search, source inspection with resolved immutable revision, and synchronous public-model download endpoint.
+- Implemented: explicit license acknowledgement, private/gated repository rejection, bounded size and disk preflight, `.part` Range resume, HTTPS redirect allowlist, optional upstream LFS SHA-256 comparison, GGUF signature check, local SHA-256 verification, and registry insertion.
+- Added unit/API tests for catalog parsing, download integrity, license gates, path handling, and API wiring. CI result for this new code is not yet verified.
+- Not implemented: asynchronous progress/cancel queue, authenticated gated/private model access, runtime automatic installation, inference endpoint/worker, GPU validation, and end-to-end platform acceptance tests.
 
 Do not mark the native model lifecycle complete until the missing components above have code, tests, and verified platform evidence.
 
@@ -685,6 +687,7 @@ Do not mark the native model lifecycle complete until the missing components abo
 
 | Date | ID | Type | Summary | Approval | Evidence |
 |---|---|---|---|---|---|
+| 2026-11-04 | FCHG-0005 | IMPLEMENT | Add public Hugging Face GGUF search, resolved-revision source inspection, synchronous bounded resumable downloader, explicit license acknowledgement, gated/private model rejection, redirect host allowlist, optional upstream LFS checksum comparison, local GGUF/SHA-256 verification, and search/source/download API tests. | Owner said continue implementation | Code committed; CI result, asynchronous cancellation/progress, runtime auto-installation, and real platform download tests remain unverified |
 | 2026-11-04 | FCHG-0004 | IMPLEMENT | Add initial Noodles-native model foundation: validated GGUF manifests, atomic registry, artifact integrity checks, CPU/RAM/disk inventory, lazy llama.cpp adapter, read-only model APIs, and tests. | Owner said proceed with implementation | First slice committed; CI result and end-to-end download/inference remain unverified |
 | 2026-11-04 | FCHG-0003 | MODIFY | Remove Ollama as a V1 local model runtime and add MOD-039 through MOD-052 for Noodles-native GGUF model discovery, pinned downloads, integrity/license checks, registry, hardware profiling, llama.cpp runtime lifecycle, CPU/GPU inference validation, resource controls, and acceptance tests. | Owner requires local models to be pulled, installed, managed, and run directly by Noodles without Ollama | Requirements only; not implemented or tested |
 | 2026-11-04 | FCHG-0002 | ADD | Add DEV-029 through DEV-038 for automatic Docker setup after initial consent, including OS/runtime detection, diagnosis, trusted package provenance, native elevation, rootless preference, sandbox verification, fail-closed behavior, and audit events. | Owner selected automatic mode | Requirements only; not implemented or tested |

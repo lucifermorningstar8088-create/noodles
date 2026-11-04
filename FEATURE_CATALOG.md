@@ -250,6 +250,16 @@
 - [ ] DEV-026 [V1] Document supported sandbox backends and their limitations.
 - [ ] DEV-027 [POST-V1] Interactive terminal sessions with explicit user attachment.
 - [ ] DEV-028 [POST-V1] Remote execution workers with authenticated transport.
+- [ ] DEV-029 [V1] Detect OS, architecture, Docker CLI/daemon/Desktop, service state, engine context, and platform prerequisites without mutation.
+- [ ] DEV-030 [V1] Classify Docker missing/stopped/unreachable/permission-denied/unsupported/prerequisite-missing/image-missing/sandbox-failed states.
+- [ ] DEV-031 [V1] Provide automatic Docker setup after one-time owner consent, with versioned consent scope and revocation.
+- [ ] DEV-032 [V1] Use only supported official vendor repositories or trusted OS package sources; verify native package signatures and installer provenance.
+- [ ] DEV-033 [V1] Automatically execute supported non-interactive install/start/repair steps within the consented plan; pause for unsupported or materially changed plans.
+- [ ] DEV-034 [V1] Preserve native UAC/sudo/polkit/installer prompts; never bypass elevation, collect admin passwords, force reboot, or auto-accept license terms.
+- [ ] DEV-035 [V1] Never auto-add the user to the Linux docker group; prefer rootless Docker where feasible and explain root-equivalent privilege implications.
+- [ ] DEV-036 [V1] Verify Docker daemon and disposable non-privileged sandbox acceptance checks before enabling command execution.
+- [ ] DEV-037 [V1] Keep command execution disabled after denial, revocation, unsupported OS, failed verification, or unresolved prerequisite; no host-shell fallback.
+- [ ] DEV-038 [V1] Audit detection, consent, plan version, installer/package actions, runtime version, and verification outcomes with secret redaction.
 
 ## 8. Git and code review
 
@@ -645,6 +655,7 @@ For each workflow, record test fixture, exact setup, expected events, expected f
 
 | Date | ID | Type | Summary | Approval | Evidence |
 |---|---|---|---|---|---|
+| 2026-11-04 | FCHG-0002 | ADD | Add DEV-029 through DEV-038 for automatic Docker setup after initial consent, including OS/runtime detection, diagnosis, trusted package provenance, native elevation, rootless preference, sandbox verification, fail-closed behavior, and audit events. | Owner selected automatic mode | Requirements only; not implemented or tested |
 | 2026-11-04 | FCHG-0001 | ADD | Initial exhaustive feature inventory covering UX, context, orchestration, providers, tools, coding, Git, research, policy, security, API, persistence, config, observability, reliability, testing, deployment, docs, governance, integrations, workflows, and release gates. | Requested by repository owner | Inventory file created; implementation not performed |
 
 ### Feature change template

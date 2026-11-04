@@ -56,7 +56,9 @@ def make_service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
     return HuggingFaceModelService(root, registry, max_download_bytes=1024 * 1024)
 
 
-def test_search_returns_public_catalog_entries(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_search_returns_public_catalog_entries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     service = make_service(tmp_path, monkeypatch)
 
     results = service.search("tiny")

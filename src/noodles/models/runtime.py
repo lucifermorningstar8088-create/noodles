@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +21,7 @@ class NativeModelRuntime:
     @staticmethod
     def status() -> dict[str, object]:
         try:
-            import llama_cpp
+            llama_cpp = import_module("llama_cpp")
         except ImportError:
             return {"engine": "llama.cpp", "installed": False, "loaded_model_id": None,
                     "backend": "unavailable", "reason": "native_binding_not_installed"}
@@ -36,8 +37,9 @@ class NativeModelRuntime:
         if not model_path.is_file() or model_path.suffix.lower() != ".gguf":
             raise ValueError("model_path must point to an existing GGUF file")
         try:
-            from llama_cpp import Llama
-        except ImportError as exc:
+            llama_module = import_module("llama_cpp")
+            llama_class = getattr(llama_module, "Llama")
+        except (ImportError, AttributeError) as exc:
             raise NativeRuntimeUnavailable(
                 "llama-cpp-python is not installed; native runtime installation is not yet enabled"
             ) from exc
@@ -47,7 +49,7 @@ class NativeModelRuntime:
             if threads < 1 or threads > 256:
                 raise ValueError("threads must be between 1 and 256")
             options["n_threads"] = threads
-        self._model = Llama(**options)
+        self._model = llama_class(**options)
         self._model_id = model_id
 
     def unload(self) -> None:

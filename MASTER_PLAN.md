@@ -707,7 +707,7 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 
 Do these in order. Do not start feature implementation until Phase 0 decisions are settled.
 
-1. [x] Confirm V1 scope: API-first, optional controlled research, Docker-only fail-closed command execution, and the three provider families.
+1. [x] Confirm V1 scope: API-first, optional controlled research, Docker-only fail-closed command execution, Anthropic/OpenAI-compatible cloud adapters, and Noodles-native GGUF local inference (no Ollama).
 2. [x] Confirm local single-user deployment and multiple explicitly authorized workspaces.
 3. [ ] Resolve license selection and private security-reporting route before public release.
 4. [ ] Confirm or revise the proposed Python/FastAPI baseline before dependency lock-in.

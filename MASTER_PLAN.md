@@ -2,7 +2,7 @@
 
 > **Document role:** Single source of truth for product scope, architecture, implementation sequence, verification, and project progress.
 >
-> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution with automatic Docker Auto-Setup after initial owner consent, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
+> **Current project status:** Local single-user, API-first agent; multiple authorized workspaces; optional controlled research; Docker-only fail-closed command execution with automatic Docker Auto-Setup after initial owner consent; cloud adapters for Anthropic and OpenAI-compatible APIs; first-party Noodles-managed GGUF local inference using a native llama.cpp integration, with no Ollama dependency. Apache-2.0 selected; private vulnerability-reporting availability remains unverified. Phase 1 scaffold and CI are verified; agent/model runtime is not implemented yet.
 > **Last reviewed:** 2026-11-04
 > **Plan version:** 1.9.0
 > **Default branch:** `main`
@@ -14,7 +14,7 @@
 Build **Noodles**, a secure, reliable, extensible AI agent that can:
 - Perform software engineering work in an explicitly authorized workspace.
 - Research and complete general-purpose digital tasks through approved tools.
-- Work with Anthropic Claude, OpenAI-compatible APIs, and local Ollama models.
+- Work with Anthropic Claude and OpenAI-compatible APIs, plus locally downloaded GGUF models managed and executed directly by Noodles through its native inference runtime.
 - Explain what it intends to do, execute in small observable steps, verify outcomes, and report honestly.
 - Resume or safely recover supported tasks after interruption.
 
@@ -62,7 +62,7 @@ Noodles is an agent runtime, not merely a chat UI or a prompt wrapper. The quali
 - Provider adapters:
   - Anthropic Messages API.
   - OpenAI-compatible Chat Completions API (endpoint/model capabilities explicitly configured).
-  - Ollama local API.
+  - Noodles-managed native local inference for GGUF models (llama.cpp integration; no Ollama service).
 - Tool calling with schema validation and normalized internal events.
 - Coding workspace tools: list, read, search, create, patch, diff, run approved commands, inspect Git state.
 - General-purpose tools: optional controlled web research and approved HTTP retrieval, enabled only when explicitly configured and permitted.
@@ -93,7 +93,7 @@ These may be considered later, but must not silently enter v1:
 - Toolchain: uv for environment and lock management; pytest and Ruff for tests/quality. Dependency ranges are declared in pyproject.toml; commit uv.lock before claiming fully reproducible installs.
 - SQLite is the proposed database for the confirmed local single-user deployment. PostgreSQL is deferred unless hosted concurrency or multi-user requirements are approved.
 - Provider API keys are optional and must never be committed.
-- Ollama is an optional local provider, not a hard dependency for cloud-provider use.
+- Local GGUF inference is a first-party Noodles capability; Ollama is not supported or required. Cloud provider credentials remain optional.
 - The first release is API-first. A UI is a later phase unless separately approved.
 
 ---
@@ -122,7 +122,7 @@ Agent Runtime
 Model Gateway
     |-- Anthropic Adapter
     |-- OpenAI-Compatible Adapter
-    |-- Ollama Adapter
+    |-- Native Local Model Manager + llama.cpp Runtime
     |
     v
 Tool Registry
@@ -316,22 +316,27 @@ State transitions must be explicit and validated. Terminal states must not silen
 
 **Exit gate:** Mock-driven tasks can plan, call tools, observe results, stop on limits, cancel, and report accurately without any real provider API.
 
-### Phase 3 — Model provider integrations
+### Phase 3 — Cloud providers and Noodles-native local model runtime
 
-**Goal:** Connect cloud and local models through explicit adapters.
+**Goal:** Connect cloud models through explicit adapters and make local model discovery, download, installation, registration, and inference fully managed by Noodles.
 
 - [ ] P3-01 Implement Anthropic adapter for supported Messages API features.
 - [ ] P3-02 Implement OpenAI-compatible adapter with configurable base URL and model.
-- [ ] P3-03 Implement Ollama adapter using its documented local API.
-- [ ] P3-04 Normalize text, usage, finish reasons, errors, and tool calls into internal types.
-- [ ] P3-05 Preserve provider-specific tool-call IDs and continuation requirements.
-- [ ] P3-06 Validate tool schemas against each provider's supported schema subset.
-- [ ] P3-07 Add capability discovery/configuration; do not assume every model supports tools.
-- [ ] P3-08 Add connection tests using mocked HTTP responses.
-- [ ] P3-09 Add opt-in live smoke tests that require user-supplied credentials/local service.
-- [ ] P3-10 Document provider setup, model limitations, and troubleshooting.
+- [ ] P3-03 Define local model catalog schema and trusted Hugging Face metadata discovery.
+- [ ] P3-04 Implement GGUF-only V1 model selection with immutable revision and exact-file pinning.
+- [ ] P3-05 Implement resumable, bounded model downloads with disk-space checks and cancellation.
+- [ ] P3-06 Verify model file format, size, SHA-256 identity, source checksum evidence, and license/access metadata.
+- [ ] P3-07 Implement local model registry, aliases, storage paths, and uninstall semantics.
+- [ ] P3-08 Implement OS/CPU/RAM/GPU/VRAM hardware profiling with uncertainty-aware fit estimates.
+- [ ] P3-09 Validate and install a compatible native llama.cpp binding/runtime under Noodles lifecycle management; no Ollama daemon or sidecar.
+- [ ] P3-10 Implement CPU-first local inference and optional GPU backend activation only after real initialization/smoke test.
+- [ ] P3-11 Implement load/unload, resource limits, cancellation, concurrency guard, and clean shutdown.
+- [ ] P3-12 Normalize local model text, tool calls, usage estimates, finish reasons, and errors into internal types.
+- [ ] P3-13 Add model capability registry and per-model tool-call validation; never assume capability from family name alone.
+- [ ] P3-14 Add mocked contract tests, local GGUF inference smoke tests, and Windows/Linux platform acceptance tests.
+- [ ] P3-15 Document model catalog, licenses, downloads, hardware requirements, runtime setup, and troubleshooting.
 
-**Exit gate:** Each adapter passes the same contract suite. Live tests are clearly distinguished from mocked tests. Missing credentials produce actionable errors, not startup failure for unrelated providers.
+**Exit gate:** Anthropic/OpenAI adapters pass their contract suites; a clean Noodles install can download a pinned GGUF, install/manage its native runtime, register/load/infer/unload it without Ollama or an external model server. CPU support is verified on each claimed OS; GPU acceleration is claimed only for tested backend/hardware combinations.
 
 ### Phase 4 — Secure coding workspace tools
 
@@ -610,6 +615,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0012 | MODIFY / ARCHITECTURE | Replace Ollama local-provider architecture with Noodles-managed native GGUF model lifecycle: catalog, pinned-revision downloads, integrity/license metadata, registry, hardware profiling, llama.cpp native runtime installation, CPU-first inference, optional verified GPU acceleration, load/unload/resource controls, and direct Noodles API. Keep Anthropic/OpenAI-compatible cloud adapters. | DEC-016, Phase 3 P3-03 to P3-15, docs/MODEL_RUNTIME.md, Phase 0 ADR-019/OWN-011, feature catalog | Owner explicitly requested independent model pull/setup/inference without Ollama | Architecture/specification only; no model manager/runtime/downloader implemented or tested |
 | 2026-11-04 | CHG-0011 | IMPLEMENT / FOUNDATION | Add Phase 1 Python package scaffold, validated loopback-only settings, JSON logging with redaction, FastAPI health/readiness routes, tests, CI, dependency audit, and setup documentation. CI run 41781764271 passed on Python 3.12 and 3.13. Keep P1-02 open for committed uv.lock/locked CI; keep P0-06 as pre-release gate. | P1-01, P1-03 through P1-10; src/noodles, tests, pyproject, CI, README/docs | Approved Phase 1 start after owner accepted P0-06 as a pre-release gate | Code and tests committed; CI verified; uv.lock not committed; no provider, DB, Docker, or workspace runtime implementation |
 | 2026-11-04 | CHG-0010 | APPROVE / FOUNDATION | Approve CPython 3.12/3.13, FastAPI + Pydantic v2 + pydantic-settings + Uvicorn, SQLite + SQLAlchemy 2.x + Alembic, uv, pytest, and Ruff; allow Phase 1 to proceed while private vulnerability reporting remains a hard pre-release gate. | Phase 0 baseline, Phase 1 engineering baseline, release gate | Owner said 'karo' to proceed with the next step | Documentation decision recorded; no code/test evidence implied by this row |
 | 2026-11-04 | CHG-0009 | MODIFY / SECURITY | Change Docker Auto-Setup from guided to automatic after initial owner consent. Noodles may automatically execute supported setup steps after consent while preserving native OS elevation, license prompts, re-consent for material scope changes, trusted sources, auditability, verification, and fail-closed behavior. Documentation only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security controls, feature catalog, decision log | Owner explicitly selected automatic mode | Documentation update only; no installer/runtime code or tests executed |
@@ -689,6 +695,7 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-013 | Project license | Apache License 2.0 (SPDX: Apache-2.0) | APPROVED | Owner accepted the recommended license; root LICENSE file added |
 | DEC-014 | Vulnerability reporting | Prefer GitHub private vulnerability reporting; no public disclosure of sensitive details | POLICY DOCUMENTED; CHANNEL UNVERIFIED | SECURITY.md added; the available GitHub connector cannot verify or enable the repository setting |
 | DEC-015 | Docker Auto-Setup | Automatic mode after initial owner consent: detect, diagnose, use trusted platform installation/repair, perform supported setup actions automatically, retain native OS elevation and license prompts, require renewed consent for material scope changes, verify daemon and sandbox, fail closed | APPROVED | Owner selected automatic mode; initial consent does not bypass OS security; implementation not started |
+| DEC-016 | Native local model runtime | Noodles independently discovers/selects/downloads/verifies/registers/loads/runs local GGUF models using a Noodles-managed native llama.cpp integration; Ollama is not a dependency or supported runtime. CPU is baseline; GPU acceleration only after backend validation. Cloud Anthropic/OpenAI-compatible adapters remain separate. | APPROVED | Owner explicitly rejected Ollama dependency and requested model setup and inference directly inside Noodles; detailed design in docs/MODEL_RUNTIME.md |
 
 ---
 

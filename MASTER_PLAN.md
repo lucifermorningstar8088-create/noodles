@@ -4,7 +4,7 @@
 >
 > **Current project status:** Phase 0 partially approved: local single-user deployment and multiple explicitly authorized workspaces confirmed. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.2.0
+> **Plan version:** 1.3.0
 > **Default branch:** `main`
 
 ---
@@ -559,7 +559,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
-| 2026-11-04 | CHG-0004 | MODIFY | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces; update Phase 0 status and decision log. | Reflect explicit owner decisions in architecture baseline | User confirmed Deployment=local and Workspace=multiple | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; documentation only; no code implementation |\n| 2026-11-04 | CHG-0003 | ADD | Add Phase 0 architecture baseline, proposed deployment/provider/security/persistence decisions, open owner questions, and risk register. | Convert broad plan into explicit reviewable decisions | Requested by repository owner to start Phase 0 | PHASE_0_BASELINE.md created; proposals documented; no application code implemented |\n| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
+| 2026-11-04 | CHG-0005 | ADD | Expand multi-workspace requirements with 12 stable feature IDs COD-033 through COD-044, covering registration, identity, validation, isolation, selection, permissions, revocation, concurrency, audit, and adversarial tests. | Translate confirmed multiple-workspace decision into testable requirements | Owner confirmed Workspace=multiple | FEATURE_CATALOG.md updated; requirements only; not implemented or tested |\n| 2026-11-04 | CHG-0004 | MODIFY | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces; update Phase 0 status and decision log. | Reflect explicit owner decisions in architecture baseline | User confirmed Deployment=local and Workspace=multiple | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; documentation only; no code implementation |\n| 2026-11-04 | CHG-0003 | ADD | Add Phase 0 architecture baseline, proposed deployment/provider/security/persistence decisions, open owner questions, and risk register. | Convert broad plan into explicit reviewable decisions | Requested by repository owner to start Phase 0 | PHASE_0_BASELINE.md created; proposals documented; no application code implemented |\n| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
 | 2026-11-04 | CHG-0001 | ADD | Create initial master plan, roadmap, checklists, security baseline, acceptance catalogue, and strict change-control rules. | Project governance | Requested by repository owner in chat | Plan file creation; implementation not performed |
 
 ### Change entry template

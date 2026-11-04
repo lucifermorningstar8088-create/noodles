@@ -58,7 +58,9 @@ class MCPServerConfig(BaseModel):
             raise ValueError("MCP environment keys must be valid environment variable names")
         for value in [*self.env.values(), *self.headers.values()]:
             if not re.fullmatch(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", value):
-                raise ValueError("MCP secrets and environment values must use \${ENV_VAR} references")
+                raise ValueError(
+                    "MCP secrets and environment values must use \\${ENV_VAR} references"
+                )
         return self
 
 

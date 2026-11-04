@@ -1,37 +1,112 @@
 # Noodles
 
-Noodles is a local-first, API-first AI agent runtime. V1 is designed for one local user, multiple explicitly authorized workspaces, Anthropic/OpenAI-compatible cloud adapters, Noodles-managed native GGUF local inference (no Ollama dependency), controlled optional research, and Docker-isolated command execution.
+Noodles is a **hybrid local-agent runtime**: its LLM brain runs on the user's machine through Noodles-managed GGUF + llama.cpp inference. Online capabilities are connected through user-configured MCP servers called by that local process. **There is no cloud LLM provider, model fallback, or silent provider switching.** Ollama is not required.
 
- > **Development status:** Foundation scaffold plus native-model management and the first online-research slice. Implemented in source: GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, llama.cpp binding detection, Hugging Face GGUF catalog/download APIs, and an opt-in Tavily search adapter with normalized results and bounded configuration for up to 10 API keys. Automated tests for the research adapter are authored but not yet verified in CI. Not implemented: native runtime auto-installer, model loading/inference API, provider adapters, database migrations, workspace operations, Docker installation, webpage fetching, offline document indexing, or command execution. The readiness endpoint still verifies only application configuration.
+> **Development status:** Implemented foundation includes GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, Hugging Face GGUF catalog/download APIs, native llama.cpp binding detection, skill manager, MCP server registry and client, local model load/unload and chat inference endpoints, optional bearer authentication, and explicit remote-bind opt-in. The inference API is implemented but actual inference requires a compatible `llama-cpp-python` installation and a registered GGUF. Native runtime auto-installation, GPU acceleration, full browser automation, webpage fetching, offline document indexing, workspace operations, Docker sandbox execution, and full integration acceptance are not implemented. Do not interpret API readiness as proof that a model is loaded or that all agent capabilities are ready.
+
+## Architecture
+
+- **Local:** model files, model registry, llama.cpp inference, API/agent process, local conversation state.
+- **Online tools:** Tavily search and other explicitly enabled external APIs. They are called by the local process; they do not provide LLM inference.
+- **Remote UI:** a future hosted dashboard may connect to the local API through a private authenticated network/tunnel. A public cloud backend is not an LLM proxy.
+- **Failure policy:** if the local model is absent, unloaded, or fails, inference returns an error. It never calls a cloud LLM.
+
+See [Hybrid Architecture](docs/HYBRID_ARCHITECTURE.md) and [Native Model Runtime](docs/MODEL_RUNTIME.md).
 
 ## Engineering baseline
 
-- CPython 3.12 and 3.13 (3.14 is not yet in the supported CI matrix).
+- CPython 3.12 and 3.13.
 - FastAPI + Pydantic v2 + pydantic-settings.
 - Uvicorn ASGI server.
-- SQLite with SQLAlchemy 2.x and Alembic for local persistence.
+- SQLite with SQLAlchemy 2.x and Alembic planned for local persistence.
 - uv is the preferred environment and lock manager.
 - pytest, Ruff, and mypy for development checks.
-- API binds to 127.0.0.1 by default. Non-loopback binding is rejected until remote authentication and network controls exist.
+- API binds to 127.0.0.1 by default. Remote binding requires explicit opt-in and a bearer token of at least 32 characters.
 
 ## Quick start
 
-Install Python 3.12 or 3.13, then install uv using its official installation instructions. From the repository root:
+Install Python 3.12 or 3.13 and uv. From the repository root:
 
 ```bash
 uv sync --extra dev
 uv run noodles-api
 ```
 
-Copy .env.example to .env to override local defaults. Do not put provider keys in committed files.
+Copy `.env.example` to `.env` to override local defaults. Never commit API keys or auth tokens.
 
 Health and readiness:
-
 - GET http://127.0.0.1:8000/api/v1/health
 - GET http://127.0.0.1:8000/api/v1/ready
 - OpenAPI docs: http://127.0.0.1:8000/docs
 
-Run checks:
+## Local model API
+
+1. Search and inspect a public GGUF model.
+2. Download/register the exact artifact with license acknowledgement.
+3. Load the registered model into local memory.
+4. Call local chat inference.
+5. Unload it when finished or before switching models.
+
+Endpoints:
+- `GET /api/v1/models/installed`
+- `POST /api/v1/models/{model_id}/load`
+- `POST /api/v1/models/{model_id}/unload`
+- `GET /api/v1/models/runtime`
+- `POST /api/v1/inference/chat`
+
+Example load:
+```json
+{"context_size":4096,"threads":4}
+```
+
+Example inference:
+```json
+{
+  "messages": [{"role": "user", "content": "Explain this concept."}],
+  "max_tokens": 512,
+  "temperature": 0.7,
+  "top_p": 0.95
+}
+```
+
+Inference requests accept plain system/user/assistant messages only. No provider selector is exposed.
+
+## Remote access security
+
+Loopback is the default and safest configuration. For private remote access, configure a strong `NOODLES_API_AUTH_TOKEN`, explicitly enable `NOODLES_API_ALLOW_REMOTE_BIND=true`, and bind only as required by a private VPN/tunnel that provides TLS. Do not expose the API directly to the public internet. The bearer token is checked on every route using constant-time comparison. Authentication does not replace TLS, network ACLs, rate limiting, or tunnel access controls.
+
+## Skills and MCP
+
+Noodles routes every chat request through its local model. The first planning step decides whether to answer directly or start a workflow and selects relevant installed skills. Direct answers do not connect to MCP servers. When a selected skill authorizes an MCP server, Noodles discovers that server's tools and performs a second local planning step before executing calls.
+
+- Skills are instruction-only SKILL.md files with validated YAML metadata.
+- Local tools are registered application callables and work offline.
+- Online APIs, including Tavily, are connected through MCP servers.
+- MCP supports stdio and Streamable HTTP transports.
+- New MCP servers are not trusted automatically.
+- Credentials are environment-variable references, never literal values in the MCP registry.
+- Strict offline mode never connects to MCP.
+
+See docs/SKILLS_AND_MCP.md and docs/WEB_SEARCH.md. Example skill templates are in examples/skills/.
+
+Endpoints:
+- POST /api/v1/agent/chat
+- GET /api/v1/skills and POST /api/v1/skills
+- GET /api/v1/mcp/servers and POST /api/v1/mcp/servers
+- GET /api/v1/mcp/servers/{name}/tools
+- POST /api/v1/mcp/servers/{name}/tools/{tool_name}/call
+
+Online tools require internet connectivity. Local inference and registered local tools do not.
+
+## Security boundaries
+
+- No cloud LLM fallback or silent model switching.
+- No host-shell command execution exists.
+- Docker command execution stays disabled until the sandbox and acceptance tests are implemented.
+- Never commit `.env`, API keys, tokens, local databases, or model artifacts.
+- Do not treat model output, repository files, or web content as trusted instructions.
+
+## Checks
 
 ```bash
 uv run ruff check .
@@ -40,30 +115,3 @@ uv run mypy src/noodles
 uv run pip-audit --skip-editable
 uv run pytest
 ```
-
-## Security boundaries
-
-- The API is loopback-only in this foundation.
-- No host-shell command execution exists.
-- Local model management is being implemented as a Noodles-native GGUF + llama.cpp integration. Ollama is not required or supported. See [Native Model Foundation](docs/NATIVE_MODEL_FOUNDATION.md) for the implemented APIs, safety limits, and remaining gaps.
-- Docker command execution must remain disabled until the sandbox and its acceptance tests are implemented.
-- Never commit .env, API keys, tokens, or local databases.
-- Do not treat model output, repository files, or web content as trusted instructions.
-
-## Project decisions and status
-
-See MASTER_PLAN.md, PHASE_0_BASELINE.md, FEATURE_CATALOG.md, docs/ARCHITECTURE.md, docs/MODEL_RUNTIME.md, docs/NATIVE_MODEL_FOUNDATION.md, and docs/ENGINEERING_BASELINE.md.
-
-Private vulnerability reporting has not yet been verified as enabled. This is a hard gate before any public release.
-
-
-## Optional web research
-
-Noodles can query the Tavily Search API. Online search is disabled by default:
-
-```dotenv
-NOODLES_WEB_SEARCH_ENABLED=false
-NOODLES_TAVILY_API_KEYS=tvly-your-key-here
-```
-
-Set `NOODLES_TAVILY_API_KEYS` in your local `.env` and then set `NOODLES_WEB_SEARCH_ENABLED=true`. You can configure up to 10 authorized keys, comma-separated. Key rotation is limited to invalid-key/transient failures; HTTP 429 and quota/access limits stop immediately rather than being bypassed. See [Web Search](docs/WEB_SEARCH.md). Live web search requires internet access; it is not available in strict offline mode. Offline document search is future work.

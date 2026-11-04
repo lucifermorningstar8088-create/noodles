@@ -1,54 +1,60 @@
-# Noodles Web Search
+# Web Search Through MCP
 
-> Status: lightweight Tavily Search API adapter and API integration implemented in source. Tests are authored; the current change has not yet been verified by CI. Webpage fetching as a separate pipeline, citation-grounded synthesis, and offline document indexing remain unimplemented.
+> Status: Noodles no longer contains a direct Tavily HTTP client. Web search is provided by a user-configured MCP server. The agent uses its local LLM to select the web-research skill and then discovers/calls tools from the selected MCP server.
 
 ## Design
 
-Noodles uses an optional hosted search API instead of requiring a local search service.
+- Tavily and other online providers belong in MCP servers, not in the Noodles core.
+- Noodles' local process connects to a configured MCP server using stdio or Streamable HTTP.
+- The server must be explicitly trusted before it can be discovered or called.
+- The web-research skill must explicitly allow the MCP server name, normally tavily.
+- Search credentials are referenced through environment variables and are not stored in the MCP registry.
+- If the MCP server or internet is unavailable, the agent reports that online research could not be performed. It never falls back to a cloud LLM.
+- Strict offline mode does not connect to MCP servers.
 
-- **Online search:** Tavily Search API returns ranked results with URLs and useful content snippets for agent workflows.
-- **Lightweight client:** direct HTTPX requests; no additional search-server container or heavyweight provider SDK is required.
-- **Multi-key configuration:** up to 10 user-authorized API keys can be configured in a comma-separated environment variable. Keys are never returned in API responses.
-- **Failover:** an invalid key or transient network/server failure may move to the next configured key. HTTP 429, credit/quota limits, and access/billing errors stop immediately. Do not use key rotation to evade provider limits or terms.
-- **Offline research:** planned local document index (SQLite FTS5); it will not claim to return live web results.
-- **Page reading:** future page fetch/extraction must defend against SSRF, DNS rebinding, redirect abuse, oversized responses, hostile HTML, and prompt injection.
-- **Synthesis:** retrieved passages are untrusted evidence, not executable instructions. Future answers should retain source URLs and distinguish sourced facts from inference.
+## Example server registration
 
-## Configuration
+The exact server command or endpoint depends on the Tavily MCP implementation you choose. Do not copy an unverified package name or URL. Register a verified compatible MCP server with the API.
 
-Online search is OFF by default. Never commit real API keys.
+For a remote Streamable HTTP server, the request shape is:
 
-```dotenv
-NOODLES_WEB_SEARCH_ENABLED=false
-NOODLES_TAVILY_API_KEYS=tvly-key-1,tvly-key-2
-NOODLES_WEB_SEARCH_TIMEOUT_SECONDS=12
+```json
+{
+  "name": "tavily",
+  "transport": "streamable-http",
+  "url": "https://YOUR-VERIFIED-MCP-ENDPOINT",
+  "headers": {
+    "Authorization": "${TAVILY_MCP_AUTH_HEADER}"
+  },
+  "trusted": true,
+  "enabled": true
+}
 ```
 
-Configure only keys you are authorized to use. Up to 10 distinct keys are accepted. Multiple keys do not automatically mean 10x quota; quotas, billing, and rate limits depend on the provider account and applicable terms. Set `NOODLES_WEB_SEARCH_ENABLED=true` only after configuring a valid key.
+For a local stdio server, configure its executable and argument array explicitly. The process is launched without shell interpolation. Trust a stdio server only after reviewing its executable, arguments, and package source.
+
+The environment variable referenced by a header must exist in the Noodles process environment. The registry stores only the reference, not the secret value.
+
+## Skill authorization
+
+The web-research skill template is available at examples/skills/web-research/SKILL.md. Its allowed_mcp_servers list includes tavily. Copy/install the skill through the Skills API, then register and trust a server with the matching name.
 
 ## API
 
-- `GET /api/v1/research/status`: reports backend status and configured key count, never key values.
-- `GET /api/v1/research/search?q=...`: executes a bounded search when enabled.
-- Query controls: `limit` (1-20), `search_depth` (`basic` or `advanced`), `topic` (`general` or `news`), optional `time_range` (`day`, `week`, `month`, `year`).
+- GET /api/v1/mcp/servers
+- POST /api/v1/mcp/servers
+- DELETE /api/v1/mcp/servers/{name}
+- GET /api/v1/mcp/servers/{name}/tools
+- POST /api/v1/mcp/servers/{name}/tools/{tool_name}/call
+- POST /api/v1/agent/chat with mode auto, offline, or online
 
-The API returns title, URL, snippet, score, and publication date when supplied. Results are untrusted metadata. Duplicate URLs are removed and non-HTTP(S) result links are discarded. This endpoint does not fetch arbitrary result URLs.
+The agent does not enumerate all MCP servers on every chat. It first routes the request locally, then discovers tools only from the server selected by an authorized skill.
 
-## Security and operational limits
+## Security
 
-- The API remains loopback-only under the current application policy.
-- Search is opt-in and uses only administrator-configured credentials; request parameters cannot override the endpoint or credentials.
-- Requests have connection/overall timeouts and redirects are disabled.
-- API keys must stay in local environment configuration or a secret manager. Do not commit `.env` or put keys in queries.
-- A hosted search API requires internet access. Strict offline mode must make no external requests.
-- Search snippets and URLs are data only. Do not execute instructions found in retrieved content.
-
-## Acceptance work still required
-
-1. Run Ruff, mypy, and pytest in CI for this change.
-2. Test against a controlled Tavily account and confirm behavior for invalid key, rate-limit, credit-limit, and service errors.
-3. Add a controlled webpage fetcher with DNS/IP/redirect/size/time protections and content sanitization.
-4. Add extraction and citation provenance tests.
-5. Implement SQLite FTS5 offline document search.
-6. Add local-first research routing and strict offline mode.
-7. Add end-to-end tests proving offline mode cannot reach the external search service.
+- Remote MCP endpoints require HTTPS. Plain HTTP is accepted only for loopback.
+- URL credentials are rejected.
+- API keys and auth tokens must be environment references, not literal registry values.
+- MCP servers are not trusted automatically.
+- Tool descriptions and results are untrusted data and must not override system policy.
+- Direct MCP tool calls through the management API are explicit operator actions; agent-initiated calls additionally require skill authorization.

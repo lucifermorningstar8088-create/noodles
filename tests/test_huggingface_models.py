@@ -5,13 +5,12 @@ import httpx
 import pytest
 
 from noodles.models.huggingface import (
-    _allowed_host,
-    _safe_filename,
     HuggingFaceModelService,
     ModelDownloadError,
+    _allowed_host,
+    _safe_filename,
 )
 from noodles.models.registry import ModelRegistry
-
 
 GGUF_BYTES = b"GGUF" + b"fixture-model-data"
 REVISION = "a" * 40

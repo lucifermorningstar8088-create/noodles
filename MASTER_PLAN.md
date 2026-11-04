@@ -2,9 +2,9 @@
 
 > **Document role:** Single source of truth for product scope, architecture, implementation sequence, verification, and project progress.
 >
-> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution with owner-approved guided Docker Auto-Setup, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
+> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution with automatic Docker Auto-Setup after initial owner consent, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.6.0
+> **Plan version:** 1.7.0
 > **Default branch:** `main`
 
 ---
@@ -215,16 +215,18 @@ The runtime must have configurable limits for maximum steps, tool calls, wall-cl
 
 The Docker Environment Manager is a separate, narrowly scoped host setup component. It is not an agent command tool and must not inherit unrestricted shell authority.
 
-**Approved mode: GUIDED.**
+**Approved mode: AUTOMATIC AFTER INITIAL OWNER CONSENT.**
 
 - **Read-only detection:** identify OS/version/architecture, Docker CLI and daemon state, selected context, permissions, and platform prerequisites.
 - **Diagnosis:** classify missing CLI, stopped/unreachable daemon, permission issue, unsupported platform, missing prerequisite, missing image, and failed sandbox health test separately.
 - **Plan:** produce an OS-specific installation/repair plan based on supported vendor documentation and trusted package managers. Present source, packages, system changes, privilege requirements, disk/network impact, reboot possibility, and license prompts.
-- **Approval:** require explicit user approval before each privileged or system-changing operation. Approval applies only to the exact displayed plan; material changes require re-approval. Never collect administrator passwords.
-- **Execution:** use supported package managers or signed vendor installers; verify signatures/checksums where available. Never run unverified remote scripts, pipe downloaded content into a shell, disable security controls, or silently accept third-party terms.
+- **Initial consent:** ask once for consent to the bounded Docker setup workflow, showing its scope, supported platform, trusted sources, likely system changes, privilege needs, network/disk impact, reboot possibility, and license prompts. Persist the consent scope/version and allow the owner to revoke it.
+- **Automatic execution:** after initial consent, automatically perform supported non-interactive detection, downloads, package installation, service startup, and verification without asking at every ordinary setup step. A materially different plan, unsupported platform, unexpected system change, or expanded permission scope requires fresh consent.
+- **Native elevation:** use OS-native UAC, sudo/polkit, or installer elevation prompts when required. Never bypass elevation, collect/store admin passwords, auto-accept third-party license terms, disable security controls, or force a reboot. User interaction required by the OS remains a hard stop until completed.
+- **Execution:** use supported package managers or signed vendor installers; verify signatures/checksums where available. Never run unverified remote scripts, pipe downloaded content into a shell, or trust installation commands supplied by a model or downloaded page.
 - **Verification:** verify CLI, daemon reachability, engine/context, and a disposable non-privileged container health test. Installer exit code alone is not proof.
 - **Activation:** enable sandbox command execution only after the sandbox acceptance checks pass. Re-check health before each command-execution session and after Docker context/daemon changes.
-- **Failure:** if approval is denied, admin rights are absent, the OS is unsupported, a reboot is needed, setup fails, or isolation cannot be proven, stop safely and keep command execution disabled. Non-command tasks may continue.
+- **Failure:** if initial consent is denied/revoked, native elevation or prerequisite action is pending, admin rights are absent, the OS is unsupported, a reboot is needed, setup fails, or isolation cannot be proven, stop safely and keep command execution disabled. Non-command tasks may continue.
 
 **Hard boundaries:** no host-shell fallback; no privileged agent containers; no host PID namespace; no unrestricted host filesystem mounts; no Docker socket mounted into agent workloads; no unauthenticated TCP daemon exposure; no automatic privileged-group membership or broad permission changes. Windows WSL2/virtualization and Linux distribution prerequisites must be checked per platform. macOS support is not claimed until validated.
 
@@ -598,6 +600,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0009 | MODIFY / SECURITY | Change Docker Auto-Setup from guided to automatic after initial owner consent. Noodles may automatically execute supported setup steps after consent while preserving native OS elevation, license prompts, re-consent for material scope changes, trusted sources, auditability, verification, and fail-closed behavior. Documentation only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security controls, feature catalog, decision log | Owner explicitly selected automatic mode | Documentation update only; no installer/runtime code or tests executed |
 | 2026-11-04 | CHG-0008 | MODIFY / SECURITY | Approve guided Docker Auto-Setup mode and add the Docker Environment Manager architecture, approval model, trusted installer constraints, verification gates, failure behavior, roadmap tasks, security controls, and acceptance tests. This is a documentation/decision update only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security checklist, acceptance catalogue, decision log | Owner explicitly selected guided mode | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; no application code/tests executed; private vulnerability-reporting route remains unverified |
 | 2026-11-04 | CHG-0007 | ADD | Add the Apache-2.0 LICENSE and SECURITY.md responsible-disclosure policy; record license choice and keep private-reporting activation as an explicit verification gate. | Legal metadata, security disclosure, Phase 0 gate | Owner approved recommended Apache-2.0 option | LICENSE commit 392cd34; SECURITY.md commit 22846f4; no code/tests executed; private reporting setting not verified |
 | 2026-11-04 | CHG-0006 | MODIFY | Record owner-approved V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families; close P0-02 and P0-04. | Scope, provider contract, command security, progress dashboard, decision log | Owner approved in chat | MASTER_PLAN.md commit 063168e; PHASE_0_BASELINE.md commit 3c65ce9; documentation only; no code/tests executed |
@@ -644,9 +647,9 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 ### Current position
 
 - **Current phase:** Phase 0 — Project governance and baseline.
-- **Current status:** Core V1 scope decisions recorded; guided Docker Auto-Setup approved and documented; Apache-2.0 LICENSE and SECURITY.md added. GitHub private vulnerability reporting is not yet verified as enabled. No application code has been implemented.
+- **Current status:** Core V1 scope decisions recorded; automatic Docker Auto-Setup after initial owner consent approved and documented; Apache-2.0 LICENSE and SECURITY.md added. GitHub private vulnerability reporting is not yet verified as enabled. No application code has been implemented.
 - **Next task:** Verify/enable GitHub private vulnerability reporting, review release policy, and confirm Python/FastAPI baseline before Phase 1; later implement Docker Environment Manager tasks P4-11 through P4-17.
-- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox; Anthropic, OpenAI-compatible, and Ollama.
+- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox with automatic setup after initial consent; Anthropic, OpenAI-compatible, and Ollama.
 - **Blocking decisions:** Private security-reporting route and release-policy review; Python/FastAPI baseline confirmation before dependency lock-in.
 - **Latest verified implementation:** None.
 - **Latest verified test run:** None.
@@ -673,7 +676,7 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-012 | Provider families | Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API | APPROVED | Owner approved; exact model/endpoint values are configurable |
 | DEC-013 | Project license | Apache License 2.0 (SPDX: Apache-2.0) | APPROVED | Owner accepted the recommended license; root LICENSE file added |
 | DEC-014 | Vulnerability reporting | Prefer GitHub private vulnerability reporting; no public disclosure of sensitive details | POLICY DOCUMENTED; CHANNEL UNVERIFIED | SECURITY.md added; the available GitHub connector cannot verify or enable the repository setting |
-| DEC-015 | Docker Auto-Setup | Guided mode: read-only detection and diagnosis, OS-specific trusted setup/repair plan, explicit approval before system changes, post-install daemon and sandbox verification, fail-closed activation | APPROVED | Owner selected guided mode; architecture and tests added to plan; implementation not started |
+| DEC-015 | Docker Auto-Setup | Automatic mode after initial owner consent: detect, diagnose, use trusted platform installation/repair, perform supported setup actions automatically, retain native OS elevation and license prompts, require renewed consent for material scope changes, verify daemon and sandbox, fail closed | APPROVED | Owner selected automatic mode; initial consent does not bypass OS security; implementation not started |
 
 ---
 

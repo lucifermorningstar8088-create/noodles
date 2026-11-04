@@ -1,6 +1,6 @@
 # Noodles — Phase 0 Architecture Baseline
 
-> Status: PROPOSED BASELINE — owner confirmation required for product choices marked OPEN.
+> Status: PARTIALLY APPROVED — local single-user deployment and multiple explicitly authorized workspaces confirmed; other owner decisions remain OPEN.
 > Date: 2026-11-04
 > Applies to: v1 planning and Phase 1 foundation.
 > Rule: A proposal is not an approved decision. Do not implement an OPEN decision as though it were confirmed.
@@ -64,20 +64,20 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-003 | HTTP API | FastAPI + Pydantic v2; versioned /api/v1 routes | PROPOSED |
 | ADR-004 | Provider boundary | Provider-neutral message/tool/event types; provider-specific adapters | PROPOSED |
 | ADR-005 | Provider protocols | Anthropic Messages; OpenAI-compatible Chat Completions; Ollama chat API | PROPOSED |
-| ADR-006 | Persistence | SQLite for local single-user; PostgreSQL only if hosted concurrency/multi-user requires it | PROPOSED |
+| ADR-006 | Persistence | SQLite for local single-user; PostgreSQL only if hosted concurrency/multi-user requires it | APPROVED for initial local mode |
 | ADR-007 | Data access | SQLAlchemy 2.x + Alembic migrations, subject to dependency validation | PROPOSED |
 | ADR-008 | Workspace security | Explicit workspace roots; canonical path checks; deny by default | REQUIRED PRINCIPLE |
 | ADR-009 | Command execution | Isolated runner only; fail closed if sandbox is unavailable | REQUIRED PRINCIPLE |
 | ADR-010 | UI | No mandatory UI in v1; API and OpenAPI docs first | PROPOSED |
-| ADR-011 | Deployment | Local development + Docker Linux deployment path | PROPOSED |
-| ADR-012 | User model | Local single-user first; remote exposure disabled until auth/TLS/rate limits are configured | PROPOSED |
+| ADR-011 | Deployment | Local PC, single-user first; Docker/hosted deployment is a later optional target | APPROVED for initial target |
+| ADR-012 | User model | Local single-user first; remote exposure disabled until auth/TLS/rate limits are configured | APPROVED |
 | ADR-013 | Release numbering | Semantic Versioning; pre-1.0 breaking changes documented | PROPOSED |
 | ADR-014 | License | Owner must choose before public distribution | OPEN |
-| ADR-015 | Security reporting | Publish a private reporting route before public release; do not invent contact details | OPEN |
+| ADR-015 | Security reporting | Publish a private reporting route before public release; do not invent contact details | OPEN |\n| ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
 
 ## 5. Deployment and user-model proposal
 
-Recommended first target: local single-user development, with the API bound to loopback by default.
+**Confirmed first target:** local PC, single-user deployment. The service must bind to loopback by default. Hosted deployment is deferred until separately approved.
 
 Safety requirements:
 - Do not bind to public interfaces by default.
@@ -229,8 +229,8 @@ No API keys, account identifiers, or private credentials are requested in this d
 
 Phase 0 status: IN_PROGRESS. Architecture proposal is recorded, but owner-dependent decisions remain open. Phase 1 may begin only after the owner confirms the minimum decisions above or explicitly authorizes the recommended defaults.
 
-## 14. Change log
+## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
-| 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |
+| 2026-11-04 | ADRSET-0002 | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces | APPROVED; documentation only |\n| 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |

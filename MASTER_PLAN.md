@@ -2,9 +2,9 @@
 
 > **Document role:** Single source of truth for product scope, architecture, implementation sequence, verification, and project progress.
 >
-> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
+> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution with owner-approved guided Docker Auto-Setup, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.5.0
+> **Plan version:** 1.6.0
 > **Default branch:** `main`
 
 ---
@@ -211,6 +211,25 @@ The agent loop must follow this sequence:
 
 The runtime must have configurable limits for maximum steps, tool calls, wall-clock duration, model tokens/cost where measurable, retries, and command duration. Reaching a limit must stop safely and produce an incomplete/blocked status, not a fabricated success.
 
+### 4.4 Docker Environment Manager — guided Auto-Setup
+
+The Docker Environment Manager is a separate, narrowly scoped host setup component. It is not an agent command tool and must not inherit unrestricted shell authority.
+
+**Approved mode: GUIDED.**
+
+- **Read-only detection:** identify OS/version/architecture, Docker CLI and daemon state, selected context, permissions, and platform prerequisites.
+- **Diagnosis:** classify missing CLI, stopped/unreachable daemon, permission issue, unsupported platform, missing prerequisite, missing image, and failed sandbox health test separately.
+- **Plan:** produce an OS-specific installation/repair plan based on supported vendor documentation and trusted package managers. Present source, packages, system changes, privilege requirements, disk/network impact, reboot possibility, and license prompts.
+- **Approval:** require explicit user approval before each privileged or system-changing operation. Approval applies only to the exact displayed plan; material changes require re-approval. Never collect administrator passwords.
+- **Execution:** use supported package managers or signed vendor installers; verify signatures/checksums where available. Never run unverified remote scripts, pipe downloaded content into a shell, disable security controls, or silently accept third-party terms.
+- **Verification:** verify CLI, daemon reachability, engine/context, and a disposable non-privileged container health test. Installer exit code alone is not proof.
+- **Activation:** enable sandbox command execution only after the sandbox acceptance checks pass. Re-check health before each command-execution session and after Docker context/daemon changes.
+- **Failure:** if approval is denied, admin rights are absent, the OS is unsupported, a reboot is needed, setup fails, or isolation cannot be proven, stop safely and keep command execution disabled. Non-command tasks may continue.
+
+**Hard boundaries:** no host-shell fallback; no privileged agent containers; no host PID namespace; no unrestricted host filesystem mounts; no Docker socket mounted into agent workloads; no unauthenticated TCP daemon exposure; no automatic privileged-group membership or broad permission changes. Windows WSL2/virtualization and Linux distribution prerequisites must be checked per platform. macOS support is not claimed until validated.
+
+Every detection, proposed plan, approval, installer/package action, version, and verification result must be auditable with secrets redacted. The setup bootstrap path must be allowlisted and testable independently from the sandbox runner.
+
 ### 4.4 Task state model
 
 Allowed states:
@@ -318,6 +337,13 @@ State transitions must be explicit and validated. Terminal states must not silen
 - [ ] P4-08 Add approval gate for destructive commands and high-impact file operations.
 - [ ] P4-09 Protect against path traversal, symlinks escaping workspace, and unsafe archive extraction.
 - [ ] P4-10 Add tests for permission boundaries and malicious path inputs.
+- [ ] P4-11 Implement read-only Docker/OS/prerequisite detection and structured diagnostic states.
+- [ ] P4-12 Implement OS-specific trusted installation/repair plan generation (official vendor guidance and supported package managers only).
+- [ ] P4-13 Implement per-action approval gates for privileged/system-changing setup steps; approval must bind to the exact plan and expire when the plan changes.
+- [ ] P4-14 Implement narrow installer execution with signature/checksum verification where available, timeout, output limits, and audit events; never collect admin passwords or execute unverified remote scripts.
+- [ ] P4-15 Implement post-setup Docker daemon and disposable non-privileged sandbox health verification.
+- [ ] P4-16 Keep command execution disabled until all sandbox checks pass; re-check health before each execution session and fail closed on drift.
+- [ ] P4-17 Add platform-specific tests for Windows prerequisites and supported Linux distributions; do not claim untested OS support.
 
 **Exit gate:** Coding tasks can inspect, edit, run targeted tests, and show a diff while staying inside the authorized workspace and permission policy.
 
@@ -413,6 +439,11 @@ These controls are release blockers, not optional enhancements.
 - [ ] SEC-13 Safe handling of symlinks, archives, temporary files, and cleanup.
 - [ ] SEC-14 Cancellation must terminate or safely detach child processes.
 - [ ] SEC-15 No automatic fallback to a less secure execution mode when sandboxing fails.
+- [ ] SEC-16 Docker bootstrap is isolated from agent command execution and cannot become a general host-shell tool.
+- [ ] SEC-17 Explicit per-action approval is required before privileged/system-changing Docker setup; no admin password capture.
+- [ ] SEC-18 Installer sources/packages are trusted and integrity-checked where supported; never execute unverified remote scripts.
+- [ ] SEC-19 Docker daemon is not exposed over unauthenticated TCP and its socket is never mounted into agent workloads.
+- [ ] SEC-20 Sandbox command execution remains disabled until daemon and isolation health checks pass; revalidate before each execution session.
 
 ---
 
@@ -484,6 +515,12 @@ All tests below are planned. None are claimed to have run.
 | AT-22 | Tool output too large | Bounded/truncated safely with metadata |
 | AT-23 | Concurrent tasks | Isolation and configured concurrency limits hold |
 | AT-24 | Data deletion/retention | Policy is enforced and auditable |
+| AT-25 | Docker absent | Read-only detection reports the correct state; command execution stays disabled and no host fallback occurs |
+| AT-26 | Docker service stopped/unreachable | Diagnosis distinguishes service/daemon failure from missing installation; setup plan is presented before changes |
+| AT-27 | Guided setup approval denied | No privileged/system-changing action runs; command execution remains disabled |
+| AT-28 | Docker install/repair succeeds | CLI and daemon are re-detected; disposable non-privileged sandbox health check must pass before activation |
+| AT-29 | Installer source/integrity invalid | Setup is blocked; unverified package/script is never executed |
+| AT-30 | Docker health/isolation drifts after activation | Next command session is blocked until health and isolation are revalidated |
 
 ---
 
@@ -561,6 +598,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0008 | MODIFY / SECURITY | Approve guided Docker Auto-Setup mode and add the Docker Environment Manager architecture, approval model, trusted installer constraints, verification gates, failure behavior, roadmap tasks, security controls, and acceptance tests. This is a documentation/decision update only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security checklist, acceptance catalogue, decision log | Owner explicitly selected guided mode | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; no application code/tests executed; private vulnerability-reporting route remains unverified |
 | 2026-11-04 | CHG-0007 | ADD | Add the Apache-2.0 LICENSE and SECURITY.md responsible-disclosure policy; record license choice and keep private-reporting activation as an explicit verification gate. | Legal metadata, security disclosure, Phase 0 gate | Owner approved recommended Apache-2.0 option | LICENSE commit 392cd34; SECURITY.md commit 22846f4; no code/tests executed; private reporting setting not verified |
 | 2026-11-04 | CHG-0006 | MODIFY | Record owner-approved V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families; close P0-02 and P0-04. | Scope, provider contract, command security, progress dashboard, decision log | Owner approved in chat | MASTER_PLAN.md commit 063168e; PHASE_0_BASELINE.md commit 3c65ce9; documentation only; no code/tests executed |
 | 2026-11-04 | CHG-0005 | ADD | Expand multi-workspace requirements with 12 stable feature IDs COD-033 through COD-044, covering registration, identity, validation, isolation, selection, permissions, revocation, concurrency, audit, and adversarial tests. | Translate confirmed multiple-workspace decision into testable requirements | Owner confirmed Workspace=multiple | FEATURE_CATALOG.md updated; requirements only; not implemented or tested |
@@ -606,8 +644,8 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 ### Current position
 
 - **Current phase:** Phase 0 — Project governance and baseline.
-- **Current status:** Core V1 scope decisions recorded; Apache-2.0 LICENSE and SECURITY.md added. GitHub private vulnerability reporting is not yet verified as enabled. No application code has been implemented.
-- **Next task:** Verify/enable GitHub private vulnerability reporting, review release policy, then confirm Python/FastAPI baseline before Phase 1.
+- **Current status:** Core V1 scope decisions recorded; guided Docker Auto-Setup approved and documented; Apache-2.0 LICENSE and SECURITY.md added. GitHub private vulnerability reporting is not yet verified as enabled. No application code has been implemented.
+- **Next task:** Verify/enable GitHub private vulnerability reporting, review release policy, and confirm Python/FastAPI baseline before Phase 1; later implement Docker Environment Manager tasks P4-11 through P4-17.
 - **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox; Anthropic, OpenAI-compatible, and Ollama.
 - **Blocking decisions:** Private security-reporting route and release-policy review; Python/FastAPI baseline confirmation before dependency lock-in.
 - **Latest verified implementation:** None.
@@ -635,6 +673,7 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-012 | Provider families | Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API | APPROVED | Owner approved; exact model/endpoint values are configurable |
 | DEC-013 | Project license | Apache License 2.0 (SPDX: Apache-2.0) | APPROVED | Owner accepted the recommended license; root LICENSE file added |
 | DEC-014 | Vulnerability reporting | Prefer GitHub private vulnerability reporting; no public disclosure of sensitive details | POLICY DOCUMENTED; CHANNEL UNVERIFIED | SECURITY.md added; the available GitHub connector cannot verify or enable the repository setting |
+| DEC-015 | Docker Auto-Setup | Guided mode: read-only detection and diagnosis, OS-specific trusted setup/repair plan, explicit approval before system changes, post-install daemon and sandbox verification, fail-closed activation | APPROVED | Owner selected guided mode; architecture and tests added to plan; implementation not started |
 
 ---
 
@@ -646,7 +685,8 @@ Do these in order. Do not start feature implementation until Phase 0 decisions a
 2. [x] Confirm local single-user deployment and multiple explicitly authorized workspaces.
 3. [ ] Resolve license selection and private security-reporting route before public release.
 4. [ ] Confirm or revise the proposed Python/FastAPI baseline before dependency lock-in.
-5. [ ] After the remaining Phase 0 entry decision is closed, authorize Phase 1 foundation work.
+5. [ ] Implement the Docker Environment Manager in Phase 4 according to DEC-015; this decision is approved but no code is implemented yet.
+6. [ ] After the remaining Phase 0 entry decision is closed, authorize Phase 1 foundation work.
 
 ---
 

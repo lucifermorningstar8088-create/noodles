@@ -8,7 +8,7 @@ def test_loopback_is_the_default_bind_address() -> None:
     assert Settings().api_host == "127.0.0.1"
 
 
-@pytest.mark.parametrize("host", ["0.0.0.0", "192.0.2.10", "example.com"])
+@pytest.mark.parametrize("host", ["0.0.0.0", "192.0.2.10"])
 def test_non_loopback_bind_requires_explicit_opt_in_and_token(host: str) -> None:
     with pytest.raises(ValidationError):
         Settings(api_host=host)
@@ -35,3 +35,12 @@ def test_short_auth_token_is_rejected() -> None:
 def test_invalid_port_is_rejected() -> None:
     with pytest.raises(ValidationError):
         Settings(api_port=70000)
+
+
+def test_remote_bind_rejects_dns_hostnames_even_with_opt_in() -> None:
+    with pytest.raises(ValidationError, match="IP address"):
+        Settings(
+            api_host="example.com",
+            api_allow_remote_bind=True,
+            api_auth_token=SecretStr("x" * 40),
+        )

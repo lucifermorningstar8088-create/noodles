@@ -229,7 +229,9 @@ class HuggingFaceModelService:
             for _ in range(6):
                 parsed = urlsplit(url)
                 if parsed.scheme != "https" or not _allowed_host(parsed.hostname):
-                    raise ModelDownloadError("download redirect target is not an approved HTTPS host")
+                    raise ModelDownloadError(
+                        "download redirect target is not an approved HTTPS host"
+                    )
                 headers = {"Range": f"bytes={downloaded}-"} if downloaded else {}
                 with client.stream("GET", url, headers=headers) as response:
                     if response.status_code in (301, 302, 303, 307, 308):

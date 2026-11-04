@@ -1,8 +1,8 @@
 # Noodles
 
-Noodles is a **hybrid local-agent runtime**: its LLM brain runs on the user's machine through Noodles-managed GGUF + llama.cpp inference. Online capabilities such as Tavily research and external APIs are tools called by that local process. **There is no cloud LLM provider, model fallback, or silent provider switching.** Ollama is not required.
+Noodles is a **hybrid local-agent runtime**: its LLM brain runs on the user's machine through Noodles-managed GGUF + llama.cpp inference. Online capabilities are connected through user-configured MCP servers called by that local process. **There is no cloud LLM provider, model fallback, or silent provider switching.** Ollama is not required.
 
-> **Development status:** Implemented foundation includes GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, Hugging Face GGUF catalog/download APIs, native llama.cpp binding detection, local model load/unload and chat inference endpoints, optional bearer authentication, and explicit remote-bind opt-in. The inference API is implemented but actual inference requires a compatible `llama-cpp-python` installation and a registered GGUF. Native runtime auto-installation, GPU acceleration, full browser automation, webpage fetching, offline document indexing, workspace operations, Docker sandbox execution, and full integration acceptance are not implemented. Do not interpret API readiness as proof that a model is loaded or that all agent capabilities are ready.
+> **Development status:** Implemented foundation includes GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, Hugging Face GGUF catalog/download APIs, native llama.cpp binding detection, skill manager, MCP server registry and client, local model load/unload and chat inference endpoints, optional bearer authentication, and explicit remote-bind opt-in. The inference API is implemented but actual inference requires a compatible `llama-cpp-python` installation and a registered GGUF. Native runtime auto-installation, GPU acceleration, full browser automation, webpage fetching, offline document indexing, workspace operations, Docker sandbox execution, and full integration acceptance are not implemented. Do not interpret API readiness as proof that a model is loaded or that all agent capabilities are ready.
 
 ## Architecture
 
@@ -75,16 +75,28 @@ Inference requests accept plain system/user/assistant messages only. No provider
 
 Loopback is the default and safest configuration. For private remote access, configure a strong `NOODLES_API_AUTH_TOKEN`, explicitly enable `NOODLES_API_ALLOW_REMOTE_BIND=true`, and bind only as required by a private VPN/tunnel that provides TLS. Do not expose the API directly to the public internet. The bearer token is checked on every route using constant-time comparison. Authentication does not replace TLS, network ACLs, rate limiting, or tunnel access controls.
 
-## Online research
+## Skills and MCP
 
-Tavily search is disabled by default. Configure in local `.env`:
+Noodles routes every chat request through its local model. The first planning step decides whether to answer directly or start a workflow and selects relevant installed skills. Direct answers do not connect to MCP servers. When a selected skill authorizes an MCP server, Noodles discovers that server's tools and performs a second local planning step before executing calls.
 
-```dotenv
-NOODLES_WEB_SEARCH_ENABLED=true
-NOODLES_TAVILY_API_KEYS=tvly-your-key-here
-```
+- Skills are instruction-only SKILL.md files with validated YAML metadata.
+- Local tools are registered application callables and work offline.
+- Online APIs, including Tavily, are connected through MCP servers.
+- MCP supports stdio and Streamable HTTP transports.
+- New MCP servers are not trusted automatically.
+- Credentials are environment-variable references, never literal values in the MCP registry.
+- Strict offline mode never connects to MCP.
 
-Up to 10 authorized keys may be configured. Rotation is limited to invalid-key/transient failures; HTTP 429 and quota/access limits stop immediately rather than being bypassed. Online tools require internet connectivity. Local inference does not.
+See docs/SKILLS_AND_MCP.md and docs/WEB_SEARCH.md. Example skill templates are in examples/skills/.
+
+Endpoints:
+- POST /api/v1/agent/chat
+- GET /api/v1/skills and POST /api/v1/skills
+- GET /api/v1/mcp/servers and POST /api/v1/mcp/servers
+- GET /api/v1/mcp/servers/{name}/tools
+- POST /api/v1/mcp/servers/{name}/tools/{tool_name}/call
+
+Online tools require internet connectivity. Local inference and registered local tools do not.
 
 ## Security boundaries
 

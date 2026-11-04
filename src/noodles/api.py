@@ -12,6 +12,7 @@ from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
 from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime
+from noodles.research.web_search import SearXNGSearchService, WebSearchError
 
 
 class ModelDownloadRequest(BaseModel):
@@ -34,6 +35,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     model_service = HuggingFaceModelService(
         runtime_settings.model_storage_dir, model_registry, runtime_settings.model_max_download_bytes
     )
+    search_service = (
+        SearXNGSearchService(
+            runtime_settings.searxng_url,
+            timeout_seconds=runtime_settings.web_search_timeout_seconds,
+        )
+        if runtime_settings.web_search_enabled and runtime_settings.searxng_url
+        else None
+    )
     application = FastAPI(
         title=runtime_settings.app_name,
         version=__version__,
@@ -43,6 +52,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.model_registry = model_registry
     application.state.model_runtime = model_runtime
     application.state.model_service = model_service
+    application.state.web_search_service = search_service
 
     @application.get("/api/v1/models/search", tags=["models"])
     def search_models(
@@ -98,6 +108,40 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def model_runtime_status() -> dict[str, object]:
         """Report native llama.cpp binding availability without claiming inference readiness."""
         return model_runtime.status_for_instance()
+
+    @application.get("/api/v1/research/search", tags=["research"])
+    def web_search(
+        q: Annotated[str, Query(min_length=1, max_length=300)],
+        limit: Annotated[int, Query(ge=1, le=20)] = 8,
+        language: Annotated[str, Query(min_length=1, max_length=16)] = "all",
+        safesearch: Annotated[int, Query(ge=0, le=2)] = 1,
+        categories: Annotated[str | None, Query(max_length=80)] = None,
+        time_range: Annotated[str | None, Query()] = None,
+    ) -> dict[str, Any]:
+        """Search through the explicitly configured SearXNG instance."""
+        if not runtime_settings.web_search_enabled:
+            raise HTTPException(status_code=503, detail="Web search is disabled by configuration")
+        if search_service is None:
+            raise HTTPException(status_code=503, detail="Set NOODLES_SEARXNG_URL to enable web search")
+        try:
+            return search_service.search(
+                q, limit=limit, language=language, safesearch=safesearch,
+                categories=categories, time_range=time_range,
+            )
+        except WebSearchError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    @application.get("/api/v1/research/status", tags=["research"])
+    def web_search_status() -> dict[str, object]:
+        """Report configured research capability without making network requests."""
+        configured = bool(runtime_settings.searxng_url)
+        enabled = runtime_settings.web_search_enabled and search_service is not None
+        return {
+            "online_search": "ready" if enabled else "disabled",
+            "backend": "searxng" if configured else None,
+            "webpage_fetching": "not_implemented",
+            "offline_document_search": "not_implemented",
+        }
 
     @application.get("/api/v1/health", tags=["system"])
     def health() -> dict[str, str]:

@@ -2,7 +2,7 @@
 
 > **Document role:** Single source of truth for product scope, architecture, implementation sequence, verification, and project progress.
 >
-> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families. License/security-reporting decisions remain open. No application implementation has been verified yet.
+> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
 > **Plan version:** 1.4.0
 > **Default branch:** `main`
@@ -246,7 +246,7 @@ State transitions must be explicit and validated. Terminal states must not silen
 - [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
 - [x] P0-04 Confirm provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API (owner-approved); model IDs and endpoint URLs remain configurable.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
-- [ ] P0-06 Confirm license and private security-reporting route; review proposed versioning/release policy.
+- [ ] P0-06 Verify private vulnerability-reporting route is enabled and usable; Apache-2.0 license selected and LICENSE added. Review release policy before public release.
 - [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
 
 **Exit gate:** Scope, deployment assumptions, and key architecture decisions are documented and owner-dependent decisions are confirmed. No implementation is considered complete in this phase. See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) for the current proposal and open decisions.
@@ -561,6 +561,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0007 | ADD | Add the Apache-2.0 LICENSE and SECURITY.md responsible-disclosure policy; record license choice and keep private-reporting activation as an explicit verification gate. | Legal metadata, security disclosure, Phase 0 gate | Owner approved recommended Apache-2.0 option | LICENSE commit 392cd34; SECURITY.md commit 22846f4; no code/tests executed; private reporting setting not verified |
 | 2026-11-04 | CHG-0006 | MODIFY | Record owner-approved V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families; close P0-02 and P0-04. | Scope, provider contract, command security, progress dashboard, decision log | Owner approved in chat | MASTER_PLAN.md commit 063168e; PHASE_0_BASELINE.md commit 3c65ce9; documentation only; no code/tests executed |
 | 2026-11-04 | CHG-0005 | ADD | Expand multi-workspace requirements with 12 stable feature IDs COD-033 through COD-044, covering registration, identity, validation, isolation, selection, permissions, revocation, concurrency, audit, and adversarial tests. | Translate confirmed multiple-workspace decision into testable requirements | Owner confirmed Workspace=multiple | FEATURE_CATALOG.md updated; requirements only; not implemented or tested |
 | 2026-11-04 | CHG-0004 | MODIFY | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces; update Phase 0 status and decision log. | Reflect explicit owner decisions in architecture baseline | User confirmed Deployment=local and Workspace=multiple | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; documentation only; no code implementation |
@@ -605,10 +606,10 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 ### Current position
 
 - **Current phase:** Phase 0 — Project governance and baseline.
-- **Current status:** Core V1 scope decisions recorded: local single-user, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and three provider families. License/security-reporting route remains open. No application code has been implemented.
-- **Next task:** Resolve P0-06 license and private security-reporting route; then confirm Python/FastAPI baseline before Phase 1.
+- **Current status:** Core V1 scope decisions recorded; Apache-2.0 LICENSE and SECURITY.md added. GitHub private vulnerability reporting is not yet verified as enabled. No application code has been implemented.
+- **Next task:** Verify/enable GitHub private vulnerability reporting, review release policy, then confirm Python/FastAPI baseline before Phase 1.
 - **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox; Anthropic, OpenAI-compatible, and Ollama.
-- **Blocking decisions:** License and private security-reporting route; Python/FastAPI baseline confirmation before dependency lock-in.
+- **Blocking decisions:** Private security-reporting route and release-policy review; Python/FastAPI baseline confirmation before dependency lock-in.
 - **Latest verified implementation:** None.
 - **Latest verified test run:** None.
 
@@ -632,6 +633,8 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-010 | V1 research | Controlled web research is optional V1 capability with explicit permissions | APPROVED | Owner approved |
 | DEC-011 | Command execution | Docker-backed sandbox only; fail closed with no host-shell fallback | APPROVED | Owner approved |
 | DEC-012 | Provider families | Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API | APPROVED | Owner approved; exact model/endpoint values are configurable |
+| DEC-013 | Project license | Apache License 2.0 (SPDX: Apache-2.0) | APPROVED | Owner accepted the recommended license; root LICENSE file added |
+| DEC-014 | Vulnerability reporting | Prefer GitHub private vulnerability reporting; no public disclosure of sensitive details | POLICY DOCUMENTED; CHANNEL UNVERIFIED | SECURITY.md added; the available GitHub connector cannot verify or enable the repository setting |
 
 ---
 

@@ -86,7 +86,9 @@ class ModelRegistry:
                 raise ValueError("registry root must be an object")
             return payload
         except (OSError, json.JSONDecodeError, ValueError) as exc:
-            raise ModelRegistryError("model registry is unreadable; refusing to overwrite it") from exc
+            raise ModelRegistryError(
+                "model registry is unreadable; refusing to overwrite it"
+            ) from exc
 
     def _write(self, data: dict[str, dict[str, object]]) -> None:
         fd, temp_name = tempfile.mkstemp(prefix=".registry-", suffix=".tmp", dir=self.storage_dir)

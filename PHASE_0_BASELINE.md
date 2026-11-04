@@ -1,6 +1,6 @@
 # Noodles — Phase 0 Architecture Baseline
 
-> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, three provider families, and Apache-2.0 license confirmed; private vulnerability-reporting activation remains OPEN.
+> Status: MOSTLY APPROVED — local single-user deployment, multiple authorized workspaces, API-first V1, optional controlled research, fail-closed Docker command sandbox, three provider families, and Apache-2.0 license confirmed; private vulnerability-reporting activation remains OPEN; guided Docker auto-setup is owner-approved for the runtime design.
 > Date: 2026-11-04
 > Applies to: v1 planning and Phase 1 foundation.
 > Rule: A proposal is not an approved decision. Do not implement an OPEN decision as though it were confirmed.
@@ -75,6 +75,7 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-014 | License | Owner must choose before public distribution | OPEN |
 | ADR-015 | Security reporting | Publish a private reporting route before public release; do not invent contact details | OPEN |
 | ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
+| ADR-017 | Docker lifecycle | Guided Docker Auto-Setup: detect, diagnose, prepare a supported install/repair path, request approval before privileged or system-changing steps, then verify the daemon and sandbox; execution remains disabled until verification passes | APPROVED |
 
 ## 5. Deployment and user-model proposal
 
@@ -135,6 +136,31 @@ Required controls:
 - Destructive commands, network access, package installation, credential access, and external side effects require policy evaluation and approval as appropriate.
 - If sandbox/isolation cannot be established, command execution is disabled. No insecure fallback.
 - Treat repository files, web pages, tool output, and model-generated plans as untrusted input.
+
+### Guided Docker Auto-Setup (owner-approved)
+
+Noodles must include a **Docker Environment Manager** that can detect and guide recovery when the required Docker runtime is missing, stopped, unhealthy, or inaccessible. This is a guided setup capability, not permission for silent system administration.
+
+Lifecycle:
+1. **Detect:** Identify OS/version, architecture, Docker CLI availability, daemon reachability, engine/context, and required platform prerequisites. Detection must be read-only.
+2. **Diagnose:** Distinguish missing CLI, stopped service/daemon, permission failure, missing WSL2/virtualization prerequisite, unavailable image, and failed container health checks. Do not collapse these into a generic "Docker missing" state.
+3. **Prepare:** Select a supported, OS-specific installation or repair path using official vendor documentation and trusted OS package managers. Show the proposed changes, packages, download source, required privileges, disk/network needs, possible reboot, and any licensing prompts before proceeding.
+4. **Approve:** Ask the user for explicit approval before downloading/installing packages, enabling services/features, changing system configuration, adding groups, changing permissions, or rebooting. Approval is scoped to the displayed action; a changed plan requires fresh approval. Never request or store an administrator password.
+5. **Install/repair:** Use the supported package manager or signed vendor installer. Verify signatures/checksums where the distribution provides them. Never execute an unverified remote script, pipe network content directly into a shell, disable OS security controls, or silently accept third-party license terms.
+6. **Verify:** Re-detect the CLI and daemon, run a minimal disposable non-privileged container health test, verify the configured isolation constraints, and record evidence. A successful installer exit code alone is not sufficient.
+7. **Activate:** Enable the command runner only after all required checks pass. Otherwise report the exact blocker and keep command execution disabled.
+
+Security and operational constraints:
+- The bootstrap/installer component is separate from the agent's Docker command sandbox. It is a narrow, audited setup capability and must not become a general host-shell tool.
+- No automatic host-shell fallback, privileged container, host PID/network namespace, Docker socket mount into agent workloads, or unrestricted host filesystem mount.
+- Do not expose the Docker daemon over an unauthenticated TCP endpoint.
+- Do not add the user to privileged groups or broaden filesystem permissions without explicit approval and a clear warning about the resulting privilege impact.
+- Windows prerequisites (for example WSL2, virtualization, and Docker Desktop compatibility) and Linux distribution support must be detected and validated; do not assume one universal installer. macOS support remains unclaimed until tested.
+- If installation requires a reboot, unsupported OS, unavailable admin rights, policy restriction, or user rejection, stop safely and explain the blocker.
+- Re-check Docker health before each command-execution session and after daemon/context changes. A stale "setup succeeded" flag is not sufficient.
+- All setup attempts, approvals, commands/package operations, versions, and verification outcomes must be auditable with secrets redacted.
+
+**Fail-closed invariant:** Until the Docker engine is reachable and the sandbox acceptance checks pass, command execution remains unavailable. The agent may continue non-command tasks that do not require the sandbox.
 
 Phase 1 may build interfaces and tests, but real command execution must not be enabled until the sandbox boundary is implemented and tested.
 
@@ -213,6 +239,7 @@ No API keys, account identifiers, or private credentials are requested in this d
 | R-008 | Feature catalog grows without prioritization | Medium | V1/V1-OPTIONAL/POST-V1 labels and change control |
 | R-009 | Windows process/sandbox behavior differs from Linux | High | Platform-specific tests; no parity claims without evidence |
 | R-010 | License/security contact remains undecided | Medium | Block public release until owner decisions are recorded |
+| R-011 | Docker auto-install changes host configuration or grants excess privilege | High | Read-only detection; per-action approval; official signed packages; no password capture; no privilege broadening by default; post-install sandbox verification; fail closed |
 
 ## 13. Confirmed owner decisions
 
@@ -226,6 +253,7 @@ No API keys, account identifiers, or private credentials are requested in this d
 | OWN-006 | V1 providers = three families | Support Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat APIs; exact model IDs and endpoint URLs remain runtime configuration |
 | OWN-007 | Project license = Apache-2.0 | Apache License 2.0 selected; root LICENSE file added; SPDX identifier is Apache-2.0 |
 | OWN-008 | Security disclosure policy | SECURITY.md instructs reporters not to disclose sensitive details publicly and prefers GitHub private vulnerability reporting; actual feature activation remains unverified |
+| OWN-009 | Docker Auto-Setup mode = guided | Noodles detects and diagnoses Docker problems, prepares a supported OS-specific setup/repair plan, obtains explicit approval before system-changing or privileged actions, performs only approved steps, verifies the daemon and sandbox, and keeps command execution disabled until verification passes |
 
 ## 14. Phase 0 exit checklist
 
@@ -236,14 +264,15 @@ No API keys, account identifiers, or private credentials are requested in this d
 - [x] P0-05 Proposed architecture and unresolved risks documented.
 - [ ] P0-06 Verify GitHub private vulnerability reporting is enabled and usable; Apache-2.0 license selected and LICENSE added. Review release policy before public release.
 - [x] P0-07 Owner confirms multiple explicitly authorized workspace roots.
+- [x] P0-08 Owner selects guided Docker Auto-Setup; architecture and security boundaries documented (documentation decision only, not implemented).
 
-Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Phase 1 may begin after the owner closes the remaining minimum architecture decision or explicitly accepts it as a pre-release gate.
+Phase 0 status: IN_PROGRESS, with core V1 scope decisions recorded and guided Docker Auto-Setup mode approved. Local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and the three provider families are owner-confirmed. Apache-2.0 has been selected and LICENSE added. The private security-reporting route remains unverified and must be enabled or replaced with a verified private contact channel before public release. Exact model IDs and endpoint URLs are runtime configuration. Phase 1 may begin after the owner closes the remaining minimum architecture decision or explicitly accepts it as a pre-release gate.
 
 ## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
-| 2026-11-04 | ADRSET-0004 | Select Apache-2.0 and add a responsible vulnerability disclosure policy; keep private-reporting activation as a verification gate | DOCUMENTATION APPROVED; private route unverified |
+| 2026-11-04 | ADRSET-0005 | Approve guided Docker Auto-Setup: read-only detection, diagnosis, OS-specific trusted setup plan, explicit approval before system changes, post-install daemon/sandbox verification, and fail-closed activation | OWNER APPROVED; documentation only; no installer or runtime code implemented |\n| 2026-11-04 | ADRSET-0004 | Select Apache-2.0 and add a responsible vulnerability disclosure policy; keep private-reporting activation as a verification gate | DOCUMENTATION APPROVED; private route unverified |
 | 2026-11-04 | ADRSET-0003 | Record owner-approved V1 scope: API-first, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families | APPROVED; documentation only |
 | 2026-11-04 | ADRSET-0002 | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces | APPROVED; documentation only |
 | 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |

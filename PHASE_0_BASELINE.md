@@ -73,7 +73,8 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-012 | User model | Local single-user first; remote exposure disabled until auth/TLS/rate limits are configured | APPROVED |
 | ADR-013 | Release numbering | Semantic Versioning; pre-1.0 breaking changes documented | PROPOSED |
 | ADR-014 | License | Owner must choose before public distribution | OPEN |
-| ADR-015 | Security reporting | Publish a private reporting route before public release; do not invent contact details | OPEN |\n| ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
+| ADR-015 | Security reporting | Publish a private reporting route before public release; do not invent contact details | OPEN |
+| ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
 
 ## 5. Deployment and user-model proposal
 
@@ -86,12 +87,7 @@ Safety requirements:
 - Remote deployment requires TLS at the edge, request limits, rate limits, secret management, and an explicit network policy.
 - Multi-user isolation requires tenant-scoped data access, workspace isolation, authorization tests, and operational controls. A login screen alone is insufficient.
 
-Owner confirmation required:
-- A. Local single-user first (recommended).
-- B. Hosted single-user first.
-- C. Multi-user service from the first release.
-
-Until confirmed, Phase 1 should use local single-user assumptions only and avoid irreversible multi-tenant design commitments.
+**Decision recorded:** Local PC, single-user first. Remote access and multi-user support are not part of the initial deployment. Multiple workspace roots are allowed only when explicitly registered and authorized. The API remains loopback-only by default.
 
 ## 6. Provider compatibility contract
 
@@ -191,8 +187,8 @@ Every task must have a unique ID and correlation ID; validated request and selec
 
 | Question | Recommended answer | Why it matters |
 |---|---|---|
-| First deployment model? | Local single-user | Simplest safe first release |
-| Initial workspace model? | One explicitly configured project root; allow multiple roots later | Reduces permission complexity |
+| First deployment model? | CONFIRMED: local PC, single-user | Owner-confirmed initial deployment | 
+| Initial workspace model? | CONFIRMED: multiple explicitly authorized workspace roots | Each root must be registered, validated, and permission-scoped |
 | UI in v1? | No; API-first | Keeps first release focused |
 | Web research in v1? | Yes, controlled and optional | Fits general-purpose agent goal, but needs source and injection controls |
 | Command runner? | Docker/container isolation; disabled if unavailable | Prevents host-level execution |
@@ -218,19 +214,28 @@ No API keys, account identifiers, or private credentials are requested in this d
 | R-009 | Windows process/sandbox behavior differs from Linux | High | Platform-specific tests; no parity claims without evidence |
 | R-010 | License/security contact remains undecided | Medium | Block public release until owner decisions are recorded |
 
-## 13. Phase 0 exit checklist
+## 13. Confirmed owner decisions
+
+| Decision ID | Decision | Recorded interpretation |
+|---|---|---|
+| OWN-001 | Deployment = local | Local PC, single-user first; API loopback-only by default; no remote exposure in initial configuration |
+| OWN-002 | Workspace model = multiple | Multiple explicitly registered and authorized workspace roots; no arbitrary path access; per-workspace permissions and containment checks |
+
+## 14. Phase 0 exit checklist
 
 - [x] P0-01 Initial repository reconnaissance recorded (historical baseline; re-check before implementation).
 - [ ] P0-02 Owner confirms product requirements and v1 scope.
-- [ ] P0-03 Owner confirms deployment target and user model.
+- [x] P0-03 Owner confirms deployment target and user model: local PC, single-user.
 - [ ] P0-04 Owner confirms provider endpoint/model requirements.
 - [x] P0-05 Proposed architecture and unresolved risks documented.
-- [ ] P0-06 Owner confirms license and security-reporting route; release policy proposal reviewed.
+- [ ] P0-06 Owner confirms license and private security-reporting route; release policy proposal reviewed.
+- [x] P0-07 Owner confirms multiple explicitly authorized workspace roots.
 
-Phase 0 status: IN_PROGRESS. Architecture proposal is recorded, but owner-dependent decisions remain open. Phase 1 may begin only after the owner confirms the minimum decisions above or explicitly authorizes the recommended defaults.
+Phase 0 status: IN_PROGRESS. Local single-user deployment and multiple authorized workspaces are confirmed. Product scope, provider requirements, license, and security-reporting route remain open. Phase 1 implementation should wait until the remaining minimum architecture choices are confirmed.
 
 ## 15. Change log
 
 | Date | ID | Change | Status |
 |---|---|---|---|
-| 2026-11-04 | ADRSET-0002 | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces | APPROVED; documentation only |\n| 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |
+| 2026-11-04 | ADRSET-0002 | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces | APPROVED; documentation only |
+| 2026-11-04 | ADRSET-0001 | Initial Phase 0 architecture baseline, proposals, owner questions, and risk register | PROPOSED; no implementation |

@@ -2,7 +2,7 @@
 
 Noodles is a local-first, API-first AI agent runtime. V1 is designed for one local user, multiple explicitly authorized workspaces, Anthropic/OpenAI-compatible cloud adapters, Noodles-managed native GGUF local inference (no Ollama dependency), controlled optional research, and Docker-isolated command execution.
 
- > **Development status:** Foundation scaffold plus the first native-model foundation slice. Implemented: GGUF manifest validation, atomic local registry, artifact location/size/signature/SHA-256 checks, conservative CPU/RAM/disk inventory, llama.cpp binding detection, Hugging Face GGUF search/source inspection, and bounded resumable public-model download with license acknowledgement and integrity checks. Not implemented: native runtime auto-installer, model loading/inference API, provider adapters, database migrations, workspace operations, Docker installation, or command execution. The readiness endpoint still verifies only application configuration.
+ > **Development status:** Foundation scaffold plus native-model management and the first online-research slice. Implemented in source: GGUF manifest validation, atomic local registry, artifact integrity checks, hardware inventory, llama.cpp binding detection, Hugging Face GGUF catalog/download APIs, and an opt-in SearXNG JSON search adapter with normalized results. Automated tests for the research adapter are authored but not yet verified in CI. Not implemented: native runtime auto-installer, model loading/inference API, provider adapters, database migrations, workspace operations, Docker installation, webpage fetching, offline document indexing, or command execution. The readiness endpoint still verifies only application configuration.
 
 ## Engineering baseline
 
@@ -55,3 +55,15 @@ uv run pytest
 See MASTER_PLAN.md, PHASE_0_BASELINE.md, FEATURE_CATALOG.md, docs/ARCHITECTURE.md, docs/MODEL_RUNTIME.md, docs/NATIVE_MODEL_FOUNDATION.md, and docs/ENGINEERING_BASELINE.md.
 
 Private vulnerability reporting has not yet been verified as enabled. This is a hard gate before any public release.
+
+
+## Optional web research
+
+Noodles can query an administrator-configured SearXNG instance. Online search is disabled by default:
+
+```dotenv
+NOODLES_WEB_SEARCH_ENABLED=false
+NOODLES_SEARXNG_URL=http://127.0.0.1:8080
+```
+
+Set `NOODLES_WEB_SEARCH_ENABLED=true` only after configuring and testing your own SearXNG instance. Search status and query endpoints are documented in [Web Search](docs/WEB_SEARCH.md). Live web search requires internet access at the SearXNG service; it is not available in strict offline mode. Webpage fetching and local offline document search are future work.

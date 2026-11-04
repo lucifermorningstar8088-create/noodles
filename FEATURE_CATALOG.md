@@ -654,6 +654,20 @@ For each workflow, record test fixture, exact setup, expected events, expected f
 - [ ] RELG-009 [V1] Known limitations and unsupported models/tools listed.
 - [ ] RELG-010 [V1] Release notes, version tag, and rollback instructions published.
 
+## 23A. Native local model implementation status
+
+First implementation slice committed on 2026-11-04:
+
+- Implemented: validated GGUF manifest and pinned 40-character revision metadata.
+- Implemented: atomic single-process JSON registry; register verifies model root containment, non-symlink regular file, byte size, GGUF magic, and SHA-256. Registry removal does not delete model files.
+- Implemented: CPU/RAM/disk inventory. GPU remains explicitly `not_probed`.
+- Implemented: lazy llama.cpp binding detection and a guarded single-model load/unload wrapper. Importing the binding is not treated as proof of an initialized backend.
+- Implemented: read-only API endpoints for installed models, hardware, and runtime status.
+- Added unit/API tests, but no CI result for this new code is yet verified.
+- Not implemented: Hugging Face catalog/tree client, pinned download manager, resumable downloads, license/gated-model workflow, automatic runtime installation, inference endpoint/worker, GPU validation, or end-to-end acceptance tests.
+
+Do not mark the native model lifecycle complete until the missing components above have code, tests, and verified platform evidence.
+
 ## 24. Inventory completion and audit rules
 
 - [ ] AUD-001 Review every V1 feature against implementation and tests.
@@ -671,6 +685,7 @@ For each workflow, record test fixture, exact setup, expected events, expected f
 
 | Date | ID | Type | Summary | Approval | Evidence |
 |---|---|---|---|---|---|
+| 2026-11-04 | FCHG-0004 | IMPLEMENT | Add initial Noodles-native model foundation: validated GGUF manifests, atomic registry, artifact integrity checks, CPU/RAM/disk inventory, lazy llama.cpp adapter, read-only model APIs, and tests. | Owner said proceed with implementation | First slice committed; CI result and end-to-end download/inference remain unverified |
 | 2026-11-04 | FCHG-0003 | MODIFY | Remove Ollama as a V1 local model runtime and add MOD-039 through MOD-052 for Noodles-native GGUF model discovery, pinned downloads, integrity/license checks, registry, hardware profiling, llama.cpp runtime lifecycle, CPU/GPU inference validation, resource controls, and acceptance tests. | Owner requires local models to be pulled, installed, managed, and run directly by Noodles without Ollama | Requirements only; not implemented or tested |
 | 2026-11-04 | FCHG-0002 | ADD | Add DEV-029 through DEV-038 for automatic Docker setup after initial consent, including OS/runtime detection, diagnosis, trusted package provenance, native elevation, rootless preference, sandbox verification, fail-closed behavior, and audit events. | Owner selected automatic mode | Requirements only; not implemented or tested |
 | 2026-11-04 | FCHG-0001 | ADD | Initial exhaustive feature inventory covering UX, context, orchestration, providers, tools, coding, Git, research, policy, security, API, persistence, config, observability, reliability, testing, deployment, docs, governance, integrations, workflows, and release gates. | Requested by repository owner | Inventory file created; implementation not performed |

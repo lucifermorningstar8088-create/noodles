@@ -7,7 +7,7 @@
 Noodles uses an optional hosted search API instead of requiring a local search service.
 
 - **Online search:** Tavily Search API returns ranked results with URLs and useful content snippets for agent workflows.
-- **Lightweight client:** direct HTTPX requests; no Tavily SDK or SearXNG container is required.
+- **Lightweight client:** direct HTTPX requests; no additional search-server container or heavyweight provider SDK is required.
 - **Multi-key configuration:** up to 10 user-authorized API keys can be configured in a comma-separated environment variable. Keys are never returned in API responses.
 - **Failover:** an invalid key or transient network/server failure may move to the next configured key. HTTP 429, credit/quota limits, and access/billing errors stop immediately. Do not use key rotation to evade provider limits or terms.
 - **Offline research:** planned local document index (SQLite FTS5); it will not claim to return live web results.

@@ -94,7 +94,7 @@ class TavilySearchService:
         # Rate-limit (429), quota/billing, and other client errors stop immediately so key
         # rotation cannot silently bypass provider limits.
         last_error: Exception | None = None
-        for index, api_key in enumerate(self._api_keys):
+        for api_key in self._api_keys:
             try:
                 with self._client() as client:
                     response = client.post(
@@ -127,7 +127,7 @@ class TavilySearchService:
                 raise WebSearchError(
                     f"Tavily request rejected with HTTP {exc.response.status_code}"
                 ) from exc
-            except (httpx.HTTPError, ValueError) as exc:
+            except (httpx.HTTPError, ValueError):
                 last_error = WebSearchError("Tavily request failed or returned invalid JSON")
                 # A network error is retried with the next configured key, bounded to 10.
                 continue
@@ -150,6 +150,8 @@ class TavilySearchService:
                 or parsed.fragment
                 or parsed.username
                 or parsed.password
+                or parsed.port is not None
+                or parsed.netloc != candidate
                 or "/" in candidate
                 or "@" in candidate
             ):

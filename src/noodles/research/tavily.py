@@ -142,6 +142,10 @@ class TavilySearchService:
         for domain in domains:
             candidate = domain.strip().lower()
             parsed = urlsplit("https://" + candidate)
+            try:
+                port = parsed.port
+            except ValueError as exc:
+                raise WebSearchError("domain filters must contain hostnames only") from exc
             if (
                 not candidate
                 or parsed.hostname is None
@@ -150,7 +154,7 @@ class TavilySearchService:
                 or parsed.fragment
                 or parsed.username
                 or parsed.password
-                or parsed.port is not None
+                or port is not None
                 or parsed.netloc != candidate
                 or "/" in candidate
                 or "@" in candidate

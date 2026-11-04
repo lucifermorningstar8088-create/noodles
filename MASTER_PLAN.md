@@ -2,7 +2,7 @@
 
 > **Document role:** Single source of truth for product scope, architecture, implementation sequence, verification, and project progress.
 >
-> **Current project status:** Planning baseline recorded. No application implementation has been verified yet.
+> **Current project status:** Phase 0 partially approved: local single-user deployment and multiple explicitly authorized workspaces confirmed. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
 > **Plan version:** 1.2.0
 > **Default branch:** `main`
@@ -87,7 +87,7 @@ These may be considered later, but must not silently enter v1:
 ### 3.3 Initial operating assumptions
 
 - Python 3.12+ is the proposed implementation baseline; confirm supported versions before locking dependencies.
-- SQLite is acceptable for single-user/local development. PostgreSQL is the target for multi-user or production deployments.
+- SQLite is the proposed database for the confirmed local single-user deployment. PostgreSQL is deferred unless hosted concurrency or multi-user requirements are approved.
 - Provider API keys are optional and must never be committed.
 - Ollama is an optional local provider, not a hard dependency for cloud-provider use.
 - The first release is API-first. A UI is a later phase unless separately approved.
@@ -242,10 +242,10 @@ State transitions must be explicit and validated. Terminal states must not silen
 
 - [x] P0-01 Record initial repository reconnaissance in this plan.
 - [ ] P0-02 Confirm product requirements and v1 scope with owner.
-- [ ] P0-03 Confirm supported deployment target and expected user model (single-user vs multi-user).
+- [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
 - [ ] P0-04 Confirm provider API requirements, endpoint formats, and expected Ollama usage.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
-- [ ] P0-06 Define versioning, release, and security-reporting policy.
+- [ ] P0-06 Confirm license and private security-reporting route; review proposed versioning/release policy.\n- [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
 
 **Exit gate:** Scope, deployment assumptions, and key architecture decisions are documented and owner-dependent decisions are confirmed. No implementation is considered complete in this phase. See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) for the current proposal and open decisions.
 
@@ -559,7 +559,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
-| 2026-11-04 | CHG-0003 | ADD | Add Phase 0 architecture baseline, proposed deployment/provider/security/persistence decisions, open owner questions, and risk register. | Convert broad plan into explicit reviewable decisions | Requested by repository owner to start Phase 0 | PHASE_0_BASELINE.md created; proposals documented; no application code implemented |\n| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
+| 2026-11-04 | CHG-0004 | MODIFY | Record owner-confirmed local single-user deployment and multiple explicitly authorized workspaces; update Phase 0 status and decision log. | Reflect explicit owner decisions in architecture baseline | User confirmed Deployment=local and Workspace=multiple | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; documentation only; no code implementation |\n| 2026-11-04 | CHG-0003 | ADD | Add Phase 0 architecture baseline, proposed deployment/provider/security/persistence decisions, open owner questions, and risk register. | Convert broad plan into explicit reviewable decisions | Requested by repository owner to start Phase 0 | PHASE_0_BASELINE.md created; proposals documented; no application code implemented |\n| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
 | 2026-11-04 | CHG-0001 | ADD | Create initial master plan, roadmap, checklists, security baseline, acceptance catalogue, and strict change-control rules. | Project governance | Requested by repository owner in chat | Plan file creation; implementation not performed |
 
 ### Change entry template
@@ -615,10 +615,10 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 |---|---|---|---|---|
 | DEC-001 | Backend language | Python 3.12+ | PROPOSED | Fast iteration and broad AI/tooling ecosystem; validate runtime support |
 | DEC-002 | API framework | FastAPI | PROPOSED | Typed HTTP API and async support |
-| DEC-003 | Local persistence | SQLite for local single-user mode | PROPOSED | Low operational overhead |
-| DEC-004 | Production persistence | PostgreSQL when multi-user/production is required | PROPOSED | Transactional persistence and concurrency |
+| DEC-003 | Local persistence | SQLite for local single-user mode | APPROVED for initial deployment | Low operational overhead; deployment choice confirmed by owner |
+| DEC-004 | Production persistence | PostgreSQL if hosted concurrency/multi-user is later approved | DEFERRED | Not needed for confirmed local single-user first deployment |
 | DEC-005 | Agent architecture | One bounded agent runtime first | PROPOSED | Easier to audit and verify than early multi-agent orchestration |
-| DEC-006 | Execution security | Workspace allowlist + isolated command runner + fail-closed policy | REQUIRED PRINCIPLE | Prevent host compromise and unsafe fallback |
+| DEC-006 | Execution security | Workspace allowlist + isolated command runner + fail-closed policy | REQUIRED PRINCIPLE | Prevent host compromise and unsafe fallback |\n| DEC-007 | Initial deployment | Local PC, single-user; API loopback-only by default | APPROVED | Explicitly confirmed by owner |\n| DEC-008 | Workspace model | Multiple explicitly authorized roots; no arbitrary filesystem paths | APPROVED | Explicitly confirmed by owner; each root needs independent validation and permissions |
 
 ---
 

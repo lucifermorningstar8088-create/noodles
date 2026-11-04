@@ -265,7 +265,7 @@ No API keys, account identifiers, or private credentials are requested in this d
 ## 14. Phase 0 exit checklist
 
 - [x] P0-01 Initial repository reconnaissance recorded (historical baseline; re-check before implementation).
-- [x] P0-02 Owner confirms V1 scope: API-first/no mandatory UI; optional controlled research; Docker-only fail-closed command sandbox; single-agent runtime and three provider families.
+- [x] P0-02 Owner confirms V1 scope: API-first/no mandatory UI; optional controlled research; Docker-only fail-closed command sandbox; Anthropic/OpenAI-compatible cloud adapters and Noodles-native GGUF local inference (no Ollama).
 - [x] P0-03 Owner confirms deployment target and user model: local PC, single-user.
 - [x] P0-04 Owner confirms model connectivity: Anthropic Messages and OpenAI-compatible Chat Completions cloud adapters, plus Noodles-managed native GGUF local inference; no Ollama dependency.
 - [x] P0-05 Proposed architecture and unresolved risks documented.

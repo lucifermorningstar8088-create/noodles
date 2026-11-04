@@ -1,7 +1,7 @@
 """Validated application settings."""
 
-from functools import lru_cache
 import ipaddress
+from functools import lru_cache
 from typing import Literal
 
 from pydantic import Field, model_validator

@@ -33,8 +33,7 @@ def _allowed_host(host: str | None) -> bool:
     if not host:
         return False
     return any(
-        host == allowed or host.endswith("." + allowed)
-        for allowed in _ALLOWED_DOWNLOAD_HOSTS
+        host == allowed or host.endswith("." + allowed) for allowed in _ALLOWED_DOWNLOAD_HOSTS
     )
 
 
@@ -88,10 +87,16 @@ class HuggingFaceModelService:
         if not 1 <= limit <= 25:
             raise ModelDownloadError("limit must be between 1 and 25")
         with self._client() as client:
-            response = client.get("https://huggingface.co/api/models", params={
-                "search": query, "filter": "gguf", "limit": limit,
-                "sort": "downloads", "direction": -1,
-            })
+            response = client.get(
+                "https://huggingface.co/api/models",
+                params={
+                    "search": query,
+                    "filter": "gguf",
+                    "limit": limit,
+                    "sort": "downloads",
+                    "direction": -1,
+                },
+            )
             response.raise_for_status()
             payload = response.json()
         if not isinstance(payload, list):
@@ -100,14 +105,16 @@ class HuggingFaceModelService:
         for item in payload:
             if not isinstance(item, dict) or not isinstance(item.get("id"), str):
                 continue
-            results.append({
-                "repository": item["id"],
-                "revision": item.get("sha"),
-                "downloads": item.get("downloads"),
-                "likes": item.get("likes"),
-                "gated": item.get("gated", False),
-                "license": (item.get("cardData") or {}).get("license"),
-            })
+            results.append(
+                {
+                    "repository": item["id"],
+                    "revision": item.get("sha"),
+                    "downloads": item.get("downloads"),
+                    "likes": item.get("likes"),
+                    "gated": item.get("gated", False),
+                    "license": (item.get("cardData") or {}).get("license"),
+                }
+            )
         return results
 
     def inspect(self, repository: str, revision: str = "main") -> dict[str, Any]:
@@ -135,22 +142,26 @@ class HuggingFaceModelService:
             name = item["rfilename"]
             if name.lower().endswith(".gguf"):
                 lfs = item.get("lfs") or {}
-                files.append({
-                    "filename": name,
-                    "size_bytes": lfs.get("size", item.get("size")),
-                    "sha256": (
-                        lfs.get("oid")
-                        if isinstance(lfs.get("oid"), str)
-                        and re.fullmatch(r"[0-9a-f]{64}", lfs["oid"])
-                        else None
-                    ),
-                })
+                files.append(
+                    {
+                        "filename": name,
+                        "size_bytes": lfs.get("size", item.get("size")),
+                        "sha256": (
+                            lfs.get("oid")
+                            if isinstance(lfs.get("oid"), str)
+                            and re.fullmatch(r"[0-9a-f]{64}", lfs["oid"])
+                            else None
+                        ),
+                    }
+                )
         card = payload.get("cardData") or {}
         return {
-            "repository": repository, "revision": resolved,
+            "repository": repository,
+            "revision": resolved,
             "gated": bool(payload.get("gated", False)),
             "private": bool(payload.get("private", False)),
-            "license": card.get("license"), "files": files,
+            "license": card.get("license"),
+            "files": files,
         }
 
     def download(
@@ -288,19 +299,23 @@ class HuggingFaceModelService:
             raise ModelDownloadError("download SHA-256 does not match Hugging Face LFS metadata")
         with partial.open("rb") as handle:
             if handle.read(4) != b"GGUF":
-                raise ModelDownloadError(
-                    "downloaded file does not have a GGUF signature"
-                )
+                raise ModelDownloadError("downloaded file does not have a GGUF signature")
         os.replace(partial, target)
         source_url = (
             f"https://huggingface.co/{repository}/resolve/"
             f"{metadata['revision']}/{quote(filename, safe='/')}"
         )
         manifest = ModelManifest(
-            model_id=model_id, repository=repository, revision=metadata["revision"],
-            filename=filename, local_path=str(target), sha256=actual_hash,
-            source_checksum_verified=bool(expected_hash), size_bytes=expected_size,
-            license=metadata["license"], source_url=source_url,
+            model_id=model_id,
+            repository=repository,
+            revision=metadata["revision"],
+            filename=filename,
+            local_path=str(target),
+            sha256=actual_hash,
+            source_checksum_verified=bool(expected_hash),
+            size_bytes=expected_size,
+            license=metadata["license"],
+            source_url=source_url,
         )
         try:
             self.registry.register(manifest)

@@ -12,7 +12,7 @@ from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
 from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime
-from noodles.research.web_search import SearXNGSearchService, WebSearchError
+from noodles.research.tavily import TavilySearchService, WebSearchError
 
 
 class ModelDownloadRequest(BaseModel):
@@ -37,12 +37,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         model_registry,
         runtime_settings.model_max_download_bytes,
     )
+    tavily_keys = TavilySearchService.parse_api_keys(runtime_settings.tavily_api_keys)
     search_service = (
-        SearXNGSearchService(
-            runtime_settings.searxng_url,
+        TavilySearchService(
+            tavily_keys,
             timeout_seconds=runtime_settings.web_search_timeout_seconds,
         )
-        if runtime_settings.web_search_enabled and runtime_settings.searxng_url
+        if runtime_settings.web_search_enabled and tavily_keys
         else None
     )
     application = FastAPI(
@@ -124,12 +125,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def web_search(
         q: Annotated[str, Query(min_length=1, max_length=300)],
         limit: Annotated[int, Query(ge=1, le=20)] = 8,
-        language: Annotated[str, Query(min_length=1, max_length=16)] = "all",
-        safesearch: Annotated[int, Query(ge=0, le=2)] = 1,
-        categories: Annotated[str | None, Query(max_length=80)] = None,
+        search_depth: Annotated[str, Query()] = "basic",
+        topic: Annotated[str, Query()] = "general",
         time_range: Annotated[str | None, Query()] = None,
     ) -> dict[str, Any]:
-        """Search through the explicitly configured SearXNG instance."""
+        """Search through the explicitly configured Tavily API."""
         if not runtime_settings.web_search_enabled:
             raise HTTPException(
                 status_code=503, detail="Web search is disabled by configuration"
@@ -137,12 +137,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if search_service is None:
             raise HTTPException(
                 status_code=503,
-                detail="Set NOODLES_SEARXNG_URL to enable web search",
+                detail="Configure NOODLES_TAVILY_API_KEYS to enable web search",
             )
         try:
             return search_service.search(
-                q, limit=limit, language=language, safesearch=safesearch,
-                categories=categories, time_range=time_range,
+                q, limit=limit, search_depth=search_depth, topic=topic,
+                time_range=time_range,
             )
         except WebSearchError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -150,11 +150,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.get("/api/v1/research/status", tags=["research"])
     def web_search_status() -> dict[str, object]:
         """Report configured research capability without making network requests."""
-        configured = bool(runtime_settings.searxng_url)
+        configured_keys = TavilySearchService.parse_api_keys(runtime_settings.tavily_api_keys)
         enabled = runtime_settings.web_search_enabled and search_service is not None
         return {
             "online_search": "ready" if enabled else "disabled",
-            "backend": "searxng" if configured else None,
+            "backend": "tavily" if configured_keys else None,
+            "configured_key_count": len(configured_keys),
             "webpage_fetching": "not_implemented",
             "offline_document_search": "not_implemented",
         }

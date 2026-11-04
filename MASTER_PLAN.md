@@ -2,9 +2,9 @@
 
 > **Document role:** Single source of truth for product scope, architecture, implementation sequence, verification, and project progress.
 >
-> **Current project status:** Phase 0 partially approved: local single-user deployment and multiple explicitly authorized workspaces confirmed. No application implementation has been verified yet.
+> **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and Anthropic/OpenAI-compatible/Ollama provider families. License/security-reporting decisions remain open. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.3.0
+> **Plan version:** 1.4.0
 > **Default branch:** `main`
 
 ---
@@ -65,12 +65,13 @@ Noodles is an agent runtime, not merely a chat UI or a prompt wrapper. The quali
   - Ollama local API.
 - Tool calling with schema validation and normalized internal events.
 - Coding workspace tools: list, read, search, create, patch, diff, run approved commands, inspect Git state.
-- General-purpose tools: controlled web research and approved HTTP retrieval, where configured.
+- General-purpose tools: optional controlled web research and approved HTTP retrieval, enabled only when explicitly configured and permitted.
 - Task planning, bounded execution loop, cancellation, approval gates, and verification.
 - Persistent sessions, task state, event history, and tool-call audit records.
 - API-first interface, health checks, configuration, logs, and operator documentation.
 - Automated unit, integration, security, and acceptance tests.
-- Docker-based deployment path; local development path.
+- Local PC, single-user deployment; API binds to loopback by default.
+- Docker-backed command sandbox is mandatory for command execution; if Docker or the isolation boundary is unavailable, command execution is disabled with no host-shell fallback.
 
 ### 3.2 Explicitly out of scope for v1
 
@@ -241,9 +242,9 @@ State transitions must be explicit and validated. Terminal states must not silen
 **Goal:** Establish a reliable project baseline and working rules.
 
 - [x] P0-01 Record initial repository reconnaissance in this plan.
-- [ ] P0-02 Confirm product requirements and v1 scope with owner.
+- [x] P0-02 Confirm V1 scope: API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command sandbox, and three provider families (owner-approved).
 - [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
-- [ ] P0-04 Confirm provider API requirements, endpoint formats, and expected Ollama usage.
+- [x] P0-04 Confirm provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API (owner-approved); model IDs and endpoint URLs remain configurable.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
 - [ ] P0-06 Confirm license and private security-reporting route; review proposed versioning/release policy.
 - [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
@@ -604,10 +605,10 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 ### Current position
 
 - **Current phase:** Phase 0 — Project governance and baseline.
-- **Current status:** Phase 0 baseline recorded; local single-user deployment and multi-workspace model are owner-confirmed. Remaining scope/provider/release decisions are open. No application code has been implemented.
-- **Next task:** P0-02 — Confirm v1 scope, then P0-04/P0-06.
-- **Confirmed:** Local PC, single-user; multiple explicitly authorized workspace roots.
-- **Blocking decisions:** Exact v1 scope; provider endpoint/model requirements; license; private security-reporting route.
+- **Current status:** Core V1 scope decisions recorded: local single-user, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution, and three provider families. License/security-reporting route remains open. No application code has been implemented.
+- **Next task:** Resolve P0-06 license and private security-reporting route; then confirm Python/FastAPI baseline before Phase 1.
+- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox; Anthropic, OpenAI-compatible, and Ollama.
+- **Blocking decisions:** License and private security-reporting route; Python/FastAPI baseline confirmation before dependency lock-in.
 - **Latest verified implementation:** None.
 - **Latest verified test run:** None.
 
@@ -627,6 +628,10 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 | DEC-006 | Execution security | Workspace allowlist + isolated command runner + fail-closed policy | REQUIRED PRINCIPLE | Prevent host compromise and unsafe fallback |
 | DEC-007 | Initial deployment | Local PC, single-user; API loopback-only by default | APPROVED | Explicitly confirmed by owner |
 | DEC-008 | Workspace model | Multiple explicitly authorized roots; no arbitrary filesystem paths | APPROVED | Explicitly confirmed by owner; each root needs independent validation and permissions |
+| DEC-009 | V1 UI | API-first; no mandatory UI; dashboard deferred | APPROVED | Owner approved |
+| DEC-010 | V1 research | Controlled web research is optional V1 capability with explicit permissions | APPROVED | Owner approved |
+| DEC-011 | Command execution | Docker-backed sandbox only; fail closed with no host-shell fallback | APPROVED | Owner approved |
+| DEC-012 | Provider families | Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API | APPROVED | Owner approved; exact model/endpoint values are configurable |
 
 ---
 
@@ -634,12 +639,11 @@ Record decisions that materially affect architecture or scope. Do not treat a pr
 
 Do these in order. Do not start feature implementation until Phase 0 decisions are settled.
 
-1. [ ] Review this master plan and confirm v1 scope.
-2. [ ] Confirm whether the first deployment is local single-user, hosted single-user, or multi-user.
-3. [ ] Confirm the intended workspace model (one configured repository vs multiple user-selected workspaces).
-4. [ ] Confirm whether live web research is a v1 requirement or a later optional capability.
-5. [ ] Approve the proposed Python/FastAPI baseline or request a change.
-6. [ ] Once decisions are recorded, begin Phase 1 and update this plan before each implementation batch.
+1. [x] Confirm V1 scope: API-first, optional controlled research, Docker-only fail-closed command execution, and the three provider families.
+2. [x] Confirm local single-user deployment and multiple explicitly authorized workspaces.
+3. [ ] Resolve license selection and private security-reporting route before public release.
+4. [ ] Confirm or revise the proposed Python/FastAPI baseline before dependency lock-in.
+5. [ ] After the remaining Phase 0 entry decision is closed, authorize Phase 1 foundation work.
 
 ---
 

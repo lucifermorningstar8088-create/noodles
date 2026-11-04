@@ -1,4 +1,6 @@
-"""FastAPI application factory and local model/research endpoints."""
+"""FastAPI application factory and local model/agent endpoints."""
+
+from __future__ import annotations
 
 import hmac
 from pathlib import Path
@@ -14,9 +16,9 @@ from noodles.config import Settings, get_settings
 from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
 from noodles.models.registry import ModelRegistry
-from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
 from noodles.agent.orchestrator import AgentError, AgentOrchestrator
 from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
+from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
 from noodles.skills.manager import SkillError, SkillManager
 from noodles.tools.registry import LocalToolRegistry
 

@@ -119,7 +119,11 @@ class MCPManager:
 
     @staticmethod
     def _resolve_config(config: MCPServerConfig) -> MCPServerConfig:
-        env = dict(os.environ)
+        inherited_names = (
+            "PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR",
+            "TEMP", "TMP", "TMPDIR", "LANG", "LC_ALL",
+        )
+        env = {key: os.environ[key] for key in inherited_names if key in os.environ}
         for key, value in config.env.items():
             ref = value[2:-1]
             if ref not in os.environ:

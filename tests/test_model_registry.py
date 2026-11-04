@@ -64,9 +64,16 @@ def test_reject_duplicate_model_id(tmp_path: Path) -> None:
 
 def test_manifest_rejects_path_traversal() -> None:
     with pytest.raises(ValidationError):
-        ModelManifest(model_id="x", repository="example/model", revision="a" * 40,
-                      filename="../evil.gguf", local_path="/tmp/x", sha256="b" * 64,
-                      size_bytes=10, source_url="https://huggingface.co/example/model")
+        ModelManifest(
+            model_id="x",
+            repository="example/model",
+            revision="a" * 40,
+            filename="../evil.gguf",
+            local_path="/tmp/x",
+            sha256="b" * 64,
+            size_bytes=10,
+            source_url="https://huggingface.co/example/model",
+        )
 
 
 def test_registry_refuses_to_overwrite_corrupt_file(tmp_path: Path) -> None:

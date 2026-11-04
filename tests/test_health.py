@@ -23,4 +23,6 @@ def test_ready_endpoint_reports_only_verified_foundation_checks() -> None:
     assert response.json() == {
         "status": "ready",
         "checks": {"configuration": "ok"},
+        "llm_execution": "local_only",
+        "cloud_llm_fallback": False,
     }

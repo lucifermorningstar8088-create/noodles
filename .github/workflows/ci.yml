@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/hybrid-local-runtime]
   pull_request:
   workflow_dispatch:
 
@@ -41,6 +41,9 @@ jobs:
 
       - name: Ruff lint
         run: uv run ruff check .
+
+      - name: Ruff format diff
+        run: uv run ruff format --diff .
 
       - name: Ruff format check
         run: uv run ruff format --check .

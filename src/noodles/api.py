@@ -15,7 +15,27 @@ from noodles.models.hardware import inspect_hardware
 from noodles.models.huggingface import HuggingFaceModelService, ModelDownloadError
 from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
-from noodles.research.tavily import TavilySearchService, WebSearchError
+from noodles.agent.orchestrator import AgentError, AgentOrchestrator
+from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
+from noodles.skills.manager import SkillError, SkillManager
+from noodles.tools.registry import LocalToolRegistry
+
+
+class SkillInstallRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    content: str = Field(min_length=20, max_length=64000)
+
+
+class AgentChatRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    message: str = Field(min_length=1, max_length=20000)
+    mode: Literal["auto", "offline", "online"] = "auto"
+    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
+
+
+class MCPToolCallRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    arguments: dict[str, Any] = Field(default_factory=dict)
 
 
 class ModelDownloadRequest(BaseModel):
@@ -75,15 +95,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         model_registry,
         runtime_settings.model_max_download_bytes,
     )
-    tavily_keys = TavilySearchService.parse_api_keys(runtime_settings.tavily_api_keys)
-    search_service = (
-        TavilySearchService(
-            tavily_keys,
-            timeout_seconds=runtime_settings.web_search_timeout_seconds,
-        )
-        if runtime_settings.web_search_enabled and tavily_keys
-        else None
-    )
+    skill_manager = SkillManager(runtime_settings.skills_dir)
+    local_tool_registry = LocalToolRegistry()
+    mcp_registry = MCPServerRegistry(runtime_settings.mcp_registry_path)
+    mcp_manager = MCPManager(mcp_registry)
+    agent = AgentOrchestrator(model_runtime, skill_manager, local_tool_registry, mcp_manager)
     application = FastAPI(
         title=runtime_settings.app_name,
         version=__version__,
@@ -93,7 +109,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.model_registry = model_registry
     application.state.model_runtime = model_runtime
     application.state.model_service = model_service
-    application.state.web_search_service = search_service
+    application.state.skill_manager = skill_manager
+    application.state.local_tool_registry = local_tool_registry
+    application.state.mcp_registry = mcp_registry
+    application.state.mcp_manager = mcp_manager
+    application.state.agent = agent
 
     if runtime_settings.api_auth_token is not None:
         expected_token = runtime_settings.api_auth_token.get_secret_value()
@@ -231,45 +251,75 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except RuntimeError as exc:
             raise HTTPException(status_code=500, detail="local inference failed") from exc
 
-    @application.get("/api/v1/research/search", tags=["research"])
-    def web_search(
-        q: Annotated[str, Query(min_length=1, max_length=300)],
-        limit: Annotated[int, Query(ge=1, le=20)] = 8,
-        search_depth: Annotated[str, Query()] = "basic",
-        topic: Annotated[str, Query()] = "general",
-        time_range: Annotated[str | None, Query()] = None,
-    ) -> dict[str, Any]:
-        """Search through the explicitly configured online Tavily API."""
-        if not runtime_settings.web_search_enabled:
-            raise HTTPException(status_code=503, detail="Web search is disabled by configuration")
-        if search_service is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Configure NOODLES_TAVILY_API_KEYS to enable web search",
-            )
+    @application.post("/api/v1/agent/chat", tags=["agent"])
+    async def agent_chat(request: AgentChatRequest) -> dict[str, Any]:
+        """Route chat through local planner, installed skills, local tools, and MCP."""
         try:
-            return search_service.search(
-                q,
-                limit=limit,
-                search_depth=search_depth,
-                topic=topic,
-                time_range=time_range,
+            return await agent.chat(
+                request.message,
+                mode=request.mode,
+                history=[item.model_dump() for item in request.history],
             )
-        except WebSearchError as exc:
+        except NativeRuntimeUnavailable as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except AgentError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @application.get("/api/v1/skills", tags=["skills"])
+    def list_skills() -> dict[str, object]:
+        return {"skills": skill_manager.list()}
+
+    @application.post("/api/v1/skills", tags=["skills"])
+    def install_skill(request: SkillInstallRequest) -> dict[str, object]:
+        try:
+            return {"status": "installed", "skill": skill_manager.install(request.content)}
+        except SkillError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @application.put("/api/v1/skills/{name}", tags=["skills"])
+    def update_skill(name: str, request: SkillInstallRequest) -> dict[str, object]:
+        try:
+            return {"status": "updated", "skill": skill_manager.update(name, request.content)}
+        except SkillError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @application.get("/api/v1/mcp/servers", tags=["mcp"])
+    def list_mcp_servers() -> dict[str, object]:
+        return {"servers": mcp_registry.list()}
+
+    @application.post("/api/v1/mcp/servers", tags=["mcp"])
+    def add_mcp_server(config: MCPServerConfig) -> dict[str, object]:
+        try:
+            mcp_registry.add(config)
+            return {"status": "registered", "server": config.name, "trusted": config.trusted}
+        except MCPError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @application.delete("/api/v1/mcp/servers/{name}", tags=["mcp"])
+    def remove_mcp_server(name: str) -> dict[str, str]:
+        try:
+            mcp_registry.remove(name)
+            return {"status": "removed", "server": name}
+        except MCPError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @application.get("/api/v1/mcp/servers/{name}/tools", tags=["mcp"])
+    async def list_mcp_tools(name: str) -> dict[str, object]:
+        try:
+            return {"server": name, "tools": await mcp_manager.list_tools(name)}
+        except MCPError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    @application.get("/api/v1/research/status", tags=["research"])
-    def web_search_status() -> dict[str, object]:
-        """Report configured research capability without making network requests."""
-        configured_keys = TavilySearchService.parse_api_keys(runtime_settings.tavily_api_keys)
-        enabled = runtime_settings.web_search_enabled and search_service is not None
-        return {
-            "online_search": "ready" if enabled else "disabled",
-            "backend": "tavily" if configured_keys else None,
-            "configured_key_count": len(configured_keys),
-            "webpage_fetching": "not_implemented",
-            "offline_document_search": "not_implemented",
-        }
+    @application.post("/api/v1/mcp/servers/{name}/tools/{tool_name}/call", tags=["mcp"])
+    async def call_mcp_tool(
+        name: str, tool_name: str, request: MCPToolCallRequest
+    ) -> dict[str, Any]:
+        try:
+            return await mcp_manager.call_tool(name, tool_name, request.arguments)
+        except MCPError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     @application.get("/api/v1/health", tags=["system"])
     def health() -> dict[str, str]:

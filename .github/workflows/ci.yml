@@ -53,3 +53,12 @@ jobs:
 
       - name: Tests
         run: uv run pytest
+
+      - name: Upload generated lockfile
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: noodles-uv-lock
+          path: uv.lock
+          if-no-files-found: error
+          retention-days: 1

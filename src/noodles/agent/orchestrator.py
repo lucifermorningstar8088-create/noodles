@@ -71,6 +71,10 @@ class AgentOrchestrator:
             raise AgentError("invalid planner route")
         if len(plan.actions) > 8 or len(plan.skill_names) > 5:
             raise AgentError("planner exceeded action limits")
+        if any(action.kind != "local" for action in plan.actions):
+            raise AgentError("first-stage planner may select local tools only")
+        if any(server not in mcp_inventory for server in plan.mcp_servers):
+            raise AgentError("planner selected an unregistered MCP server")
         manifests = {}
         skill_instructions = []
         for name in plan.skill_names:

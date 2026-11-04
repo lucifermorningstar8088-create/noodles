@@ -103,7 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             """Protect every HTTP route when an API token is configured."""
             supplied = request.headers.get("authorization", "")
             prefix = "Bearer "
-            candidate = supplied[len(prefix):] if supplied.startswith(prefix) else ""
+            candidate = supplied[len(prefix) :] if supplied.startswith(prefix) else ""
             if not hmac.compare_digest(candidate, expected_token):
                 return JSONResponse(
                     status_code=401,
@@ -147,7 +147,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Download, verify, and register one public GGUF file at a pinned revision."""
         try:
             manifest = model_service.download(
-                request.repository, request.revision, request.filename, request.model_id,
+                request.repository,
+                request.revision,
+                request.filename,
+                request.model_id,
                 accept_license=request.accept_license,
             )
             return {"status": "installed", "model": manifest.model_dump(mode="json")}
@@ -161,9 +164,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.get("/api/v1/models/installed", tags=["models"])
     def installed_models() -> dict[str, object]:
         """List registered local model manifests; never scans or executes arbitrary files."""
-        return {
-            "models": [item.model_dump(mode="json") for item in model_registry.list_models()]
-        }
+        return {"models": [item.model_dump(mode="json") for item in model_registry.list_models()]}
 
     @application.post("/api/v1/models/{model_id}/load", tags=["models"])
     def load_model(model_id: str, request: ModelLoadRequest) -> dict[str, object]:
@@ -248,7 +249,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         try:
             return search_service.search(
-                q, limit=limit, search_depth=search_depth, topic=topic,
+                q,
+                limit=limit,
+                search_depth=search_depth,
+                topic=topic,
                 time_range=time_range,
             )
         except WebSearchError as exc:

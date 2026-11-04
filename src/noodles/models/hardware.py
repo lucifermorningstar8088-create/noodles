@@ -13,7 +13,12 @@ def _memory_bytes() -> int | None:
         try:
             pages = os.sysconf("SC_PHYS_PAGES")
             page_size = os.sysconf("SC_PAGE_SIZE")
-            if isinstance(pages, int) and isinstance(page_size, int) and pages > 0 and page_size > 0:
+            if (
+                isinstance(pages, int)
+                and isinstance(page_size, int)
+                and pages > 0
+                and page_size > 0
+            ):
                 return pages * page_size
         except (ValueError, OSError):
             pass
@@ -22,15 +27,21 @@ def _memory_bytes() -> int | None:
             import ctypes
 
             class MemoryStatus(ctypes.Structure):
-                _fields_ = [("length", ctypes.c_ulong), ("memory_load", ctypes.c_ulong),
-                            ("total_phys", ctypes.c_ulonglong), ("avail_phys", ctypes.c_ulonglong),
-                            ("total_page", ctypes.c_ulonglong), ("avail_page", ctypes.c_ulonglong),
-                            ("total_virtual", ctypes.c_ulonglong), ("avail_virtual", ctypes.c_ulonglong),
-                            ("avail_extended", ctypes.c_ulonglong)]
+                _fields_ = [
+                    ("length", ctypes.c_ulong),
+                    ("memory_load", ctypes.c_ulong),
+                    ("total_phys", ctypes.c_ulonglong),
+                    ("avail_phys", ctypes.c_ulonglong),
+                    ("total_page", ctypes.c_ulonglong),
+                    ("avail_page", ctypes.c_ulonglong),
+                    ("total_virtual", ctypes.c_ulonglong),
+                    ("avail_virtual", ctypes.c_ulonglong),
+                    ("avail_extended", ctypes.c_ulonglong),
+                ]
 
             status = MemoryStatus()
             status.length = ctypes.sizeof(status)
-            windll = getattr(ctypes, "windll")
+            windll = ctypes.windll
             if windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
                 return int(status.total_phys)
         except (AttributeError, OSError):

@@ -42,7 +42,9 @@ class MCPServerConfig(BaseModel):
         if self.url:
             parsed = urlsplit(self.url)
             if parsed.username or parsed.password or not parsed.hostname:
-                raise ValueError("MCP URL must not contain credentials and must include a hostname")
+                raise ValueError(
+                    "MCP URL must not contain credentials and must include a hostname"
+                )
             is_loopback = parsed.hostname == "localhost"
             try:
                 is_loopback = is_loopback or ipaddress.ip_address(parsed.hostname).is_loopback

@@ -37,6 +37,7 @@ Run checks:
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy src/noodles
+uv run pip-audit --skip-editable
 uv run pytest
 ```
 

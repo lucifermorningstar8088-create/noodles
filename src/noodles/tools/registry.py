@@ -31,8 +31,7 @@ class LocalToolRegistry:
 
     def describe(self) -> list[dict[str, str]]:
         return [
-            {"name": name, "description": desc}
-            for name, (desc, _) in sorted(self._tools.items())
+            {"name": name, "description": desc} for name, (desc, _) in sorted(self._tools.items())
         ]
 
     def call(self, name: str, arguments: dict[str, Any]) -> Any:

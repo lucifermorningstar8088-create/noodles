@@ -71,8 +71,8 @@ It is not a thin chat wrapper, unrestricted computer-control agent, or autonomou
 | ADR-010 | UI | No mandatory UI in V1; API and OpenAPI docs first; dashboard deferred | APPROVED |
 | ADR-011 | Deployment | Local PC, single-user first; Docker/hosted deployment is a later optional target | APPROVED for initial target |
 | ADR-012 | User model | Local single-user first; remote exposure disabled until auth/TLS/rate limits are configured | APPROVED |
-| ADR-013 | Release numbering | Semantic Versioning; pre-1.0 breaking changes documented | PROPOSED |
-| ADR-014 | License | Owner must choose before public distribution | OPEN |
+| ADR-013 | Release numbering | Semantic Versioning; pre-1.0 breaking changes documented | APPROVED |
+| ADR-014 | License | Apache-2.0; SPDX identifier Apache-2.0; root LICENSE file present | APPROVED |
 | ADR-015 | Security reporting | Enable GitHub private vulnerability reporting or publish a verified, monitored private contact before any public release; current status unverified and remains a hard release gate | OPEN |
 | ADR-016 | Workspace model | Support multiple explicitly authorized workspace roots; every root must be configured and independently validated | APPROVED |
 | ADR-017 | Docker lifecycle | Automatic Docker Auto-Setup after initial owner consent: detect, diagnose, use supported trusted install/repair channels, automatically perform supported setup actions, retain native OS elevation/license prompts, renew consent for material scope changes, then verify daemon and sandbox; execution remains disabled until verification passes | APPROVED |

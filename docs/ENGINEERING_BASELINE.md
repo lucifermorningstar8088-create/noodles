@@ -22,6 +22,7 @@ Status: owner-approved baseline; scaffold implementation in progress.
 | Tests | pytest + FastAPI TestClient/httpx | Small, readable API and unit tests |
 | Lint/format | Ruff | One fast tool for common lint and formatting checks |
 | Types | mypy | Static checks on the application package |
+| Dependency audit | pip-audit | Vulnerability audit for third-party installed dependencies |
 
 ## Dependency policy
 

@@ -4,7 +4,7 @@
 >
 > **Current project status:** Core V1 scope approved: local single-user deployment, multiple authorized workspaces, API-first/no mandatory UI, optional controlled research, Docker-only fail-closed command execution with automatic Docker Auto-Setup after initial owner consent, and Anthropic/OpenAI-compatible/Ollama provider families. Apache-2.0 selected and LICENSE added; private vulnerability-reporting availability remains unverified. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.7.0
+> **Plan version:** 1.8.0
 > **Default branch:** `main`
 
 ---
@@ -87,7 +87,10 @@ These may be considered later, but must not silently enter v1:
 
 ### 3.3 Initial operating assumptions
 
-- Python 3.12+ is the proposed implementation baseline; confirm supported versions before locking dependencies.
+- Runtime baseline approved: CPython >=3.12,<3.14, with CI on 3.12 and 3.13. Defer 3.14 until dependencies and platform behavior pass CI.
+- API stack: FastAPI + Pydantic v2 + pydantic-settings, served by Uvicorn; loopback bind by default.
+- Persistence: SQLite + SQLAlchemy 2.x + Alembic migrations for local single-user V1.
+- Toolchain: uv for environment and lock management; pytest and Ruff for tests/quality. Dependency ranges are declared in pyproject.toml; commit uv.lock before claiming fully reproducible installs.
 - SQLite is the proposed database for the confirmed local single-user deployment. PostgreSQL is deferred unless hosted concurrency or multi-user requirements are approved.
 - Provider API keys are optional and must never be committed.
 - Ollama is an optional local provider, not a hard dependency for cloud-provider use.
@@ -269,7 +272,7 @@ State transitions must be explicit and validated. Terminal states must not silen
 - [x] P0-03 Confirm supported deployment target and expected user model: local PC, single-user (owner-confirmed).
 - [x] P0-04 Confirm provider families/protocols: Anthropic Messages, OpenAI-compatible Chat Completions, and Ollama chat API (owner-approved); model IDs and endpoint URLs remain configurable.
 - [x] P0-05 Record proposed architecture decisions and unresolved risks in [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md).
-- [ ] P0-06 Verify private vulnerability-reporting route is enabled and usable; Apache-2.0 license selected and LICENSE added. Review release policy before public release.
+- [ ] P0-06 Verify private vulnerability-reporting route is enabled and usable; the connected GitHub interface could not verify or enable it. Keep as a hard pre-release gate; Apache-2.0 is selected and LICENSE exists.
 - [x] P0-07 Confirm workspace model: multiple explicitly authorized workspace roots (owner-confirmed).
 - [x] P0-08 Confirm Docker Auto-Setup mode: automatic after initial owner consent, retaining native OS elevation/license prompts and fail-closed behavior (owner-confirmed; documentation only, not implemented).
 
@@ -278,6 +281,8 @@ State transitions must be explicit and validated. Terminal states must not silen
 ### Phase 1 — Repository foundation and engineering standards
 
 **Goal:** Create a reproducible, testable Python project.
+
+**Approved baseline:** See [PHASE_0_BASELINE.md](./PHASE_0_BASELINE.md) ADR-002/003/006/007/018. P0-06 remains a hard pre-release gate; Phase 1 may proceed.
 
 - [ ] P1-01 Create package structure under `src/noodles/`.
 - [ ] P1-02 Add `pyproject.toml` with pinned/ranged dependencies and dev extras.
@@ -605,6 +610,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0010 | APPROVE / FOUNDATION | Approve CPython 3.12/3.13, FastAPI + Pydantic v2 + pydantic-settings + Uvicorn, SQLite + SQLAlchemy 2.x + Alembic, uv, pytest, and Ruff; allow Phase 1 to proceed while private vulnerability reporting remains a hard pre-release gate. | Phase 0 baseline, Phase 1 engineering baseline, release gate | Owner said 'karo' to proceed with the next step | Documentation decision recorded; no code/test evidence implied by this row |
 | 2026-11-04 | CHG-0009 | MODIFY / SECURITY | Change Docker Auto-Setup from guided to automatic after initial owner consent. Noodles may automatically execute supported setup steps after consent while preserving native OS elevation, license prompts, re-consent for material scope changes, trusted sources, auditability, verification, and fail-closed behavior. Documentation only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security controls, feature catalog, decision log | Owner explicitly selected automatic mode | Documentation update only; no installer/runtime code or tests executed |
 | 2026-11-04 | CHG-0008 | MODIFY / SECURITY | Approve guided Docker Auto-Setup mode and add the Docker Environment Manager architecture, approval model, trusted installer constraints, verification gates, failure behavior, roadmap tasks, security controls, and acceptance tests. This is a documentation/decision update only; no setup code exists yet. | Phase 0 baseline, architecture, Phase 4 roadmap, security checklist, acceptance catalogue, decision log | Owner explicitly selected guided mode | PHASE_0_BASELINE.md and MASTER_PLAN.md updated; no application code/tests executed; private vulnerability-reporting route remains unverified |
 | 2026-11-04 | CHG-0007 | ADD | Add the Apache-2.0 LICENSE and SECURITY.md responsible-disclosure policy; record license choice and keep private-reporting activation as an explicit verification gate. | Legal metadata, security disclosure, Phase 0 gate | Owner approved recommended Apache-2.0 option | LICENSE commit 392cd34; SECURITY.md commit 22846f4; no code/tests executed; private reporting setting not verified |
@@ -652,9 +658,9 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 ### Current position
 
 - **Current phase:** Phase 0 — Project governance and baseline.
-- **Current status:** Core V1 scope decisions recorded; automatic Docker Auto-Setup after initial owner consent approved and documented; Apache-2.0 LICENSE and SECURITY.md added. GitHub private vulnerability reporting is not yet verified as enabled. No application code has been implemented.
-- **Next task:** Verify/enable GitHub private vulnerability reporting, review release policy, and confirm Python/FastAPI baseline before Phase 1; later implement Docker Environment Manager tasks P4-11 through P4-17.
-- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox with automatic setup after initial consent; Anthropic, OpenAI-compatible, and Ollama.
+- **Current status:** Engineering baseline approved; Phase 1 foundation work may proceed. P0-06 (private vulnerability reporting) remains unverified and is a hard pre-release gate. Phase 1 scaffold implementation is beginning; no successful build/test claim until CI evidence exists.
+- **Next task:** Implement and verify Phase 1 foundation: package structure, pyproject, config, logging, FastAPI health/readiness endpoints, tests, CI, and setup docs. Separately, owner must enable/verify GitHub private vulnerability reporting before any public release.
+- **Confirmed:** Local PC/single-user; multiple authorized workspaces; API-first; optional research; Docker-only command sandbox with automatic setup after initial consent; Anthropic, OpenAI-compatible, and Ollama; Python 3.12/3.13 baseline; FastAPI/Pydantic v2; SQLite/SQLAlchemy/Alembic; uv/pytest/Ruff.
 - **Blocking decisions:** Private security-reporting route and release-policy review; Python/FastAPI baseline confirmation before dependency lock-in.
 - **Latest verified implementation:** None.
 - **Latest verified test run:** None.

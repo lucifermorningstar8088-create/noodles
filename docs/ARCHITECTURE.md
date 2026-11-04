@@ -3,6 +3,8 @@
 > Status: owner-approved design only. No installer, runtime manager, or sandbox implementation is claimed to exist.
 > Decision: automatic Docker setup after initial owner consent.
 > Reviewed: 2026-11-04
+>
+> The local model architecture is specified separately in [MODEL_RUNTIME.md](./MODEL_RUNTIME.md). Noodles manages local GGUF downloads and native llama.cpp inference itself; Ollama is not required or supported.
 
 ## 1. Goal
 

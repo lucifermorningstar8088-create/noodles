@@ -207,6 +207,18 @@
 - [ ] COD-030 [V1] Workspace snapshot/hash before and after task.
 - [ ] COD-031 [V1] Report external edits/conflicts instead of overwriting them.
 - [ ] COD-032 [V1] Tests for every path boundary and file-operation failure mode.
+- [ ] COD-033 [V1] Register multiple workspace roots through an explicit owner-controlled configuration flow.
+- [ ] COD-034 [V1] Assign each workspace a stable ID, display name, canonical root path, and enabled/disabled state.
+- [ ] COD-035 [V1] Validate each root exists, is a directory, is readable, and satisfies configured write policy before activation.
+- [ ] COD-036 [V1] Reject duplicate, nested, overlapping, ambiguous, or conflicting roots unless an explicit safe policy permits the relationship.
+- [ ] COD-037 [V1] Bind every task and session to an explicit selected workspace ID; never infer a workspace from model output alone.
+- [ ] COD-038 [V1] Enforce workspace-level permissions independently for read, write, execute, and Git operations.
+- [ ] COD-039 [V1] Support safe workspace disable/removal while preserving task-history references and refusing removal during active operations.
+- [ ] COD-040 [V1] Revalidate canonical paths and symlink boundaries on every operation, not only at workspace registration.
+- [ ] COD-041 [V1] Prevent cross-workspace file access, search leakage, temporary-file leakage, and artifact confusion.
+- [ ] COD-042 [V1] Include workspace ID and safe workspace label in task events, audit records, and diagnostics.
+- [ ] COD-043 [V1] Define concurrent task policy per workspace: locking, read-only concurrency, write serialization, and cancellation cleanup.
+- [ ] COD-044 [V1] Test workspace switching, root revocation, path replacement, nested roots, and cross-workspace isolation adversarially.
 
 ## 7. Command execution and developer tools
 

@@ -232,6 +232,8 @@ The Docker Environment Manager is a separate, narrowly scoped host setup compone
 
 Every detection, proposed plan, approval, installer/package action, version, and verification result must be auditable with secrets redacted. The setup bootstrap path must be allowlisted and testable independently from the sandbox runner.
 
+Detailed component boundaries, consent semantics, runtime states, failure behavior, and acceptance tests are specified in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
 ### 4.4 Task state model
 
 Allowed states:

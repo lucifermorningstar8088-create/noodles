@@ -29,20 +29,27 @@ class Settings(BaseSettings):
         default=200_000_000_000, ge=1_000_000, le=2_000_000_000_000
     )
     web_search_enabled: bool = False
-    searxng_url: str | None = None
+    tavily_api_keys: str | None = None
     web_search_timeout_seconds: float = Field(default=12.0, ge=2.0, le=30.0)
 
     @model_validator(mode="after")
     def enforce_loopback_binding(self) -> "Settings":
-        """Keep the API local-only until authentication and remote-access controls exist."""
-        if self.api_host.lower() == "localhost":
-            return self
-        try:
-            address = ipaddress.ip_address(self.api_host)
-        except ValueError as exc:
-            raise ValueError("api_host must be localhost or a loopback IP address") from exc
-        if not address.is_loopback:
-            raise ValueError("api_host must be loopback-only; remote binding is not supported yet")
+        """Validate local-only binding and bounded web-search credentials."""
+        if self.api_host.lower() != "localhost":
+            try:
+                address = ipaddress.ip_address(self.api_host)
+            except ValueError as exc:
+                raise ValueError("api_host must be localhost or a loopback IP address") from exc
+            if not address.is_loopback:
+                raise ValueError(
+                    "api_host must be loopback-only; remote binding is not supported yet"
+                )
+        if self.tavily_api_keys:
+            keys = [key.strip() for key in self.tavily_api_keys.split(",") if key.strip()]
+            if len(keys) > 10:
+                raise ValueError("at most 10 Tavily API keys may be configured")
+            if len(set(keys)) != len(keys):
+                raise ValueError("duplicate Tavily API keys are not allowed")
         return self
 
 

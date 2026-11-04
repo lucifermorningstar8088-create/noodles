@@ -30,6 +30,7 @@ Ollama is not a dependency, runtime, service, or required compatibility layer.
 
 Endpoints:
 - `GET /api/v1/models/search?q=...`
+- `GET /api/v1/models/recommended?per_family_limit=3` (ranked discovery only; no download or load)
 - `GET /api/v1/models/source?repository=owner/model&revision=main`
 - `POST /api/v1/models/download`
 - `GET /api/v1/models/installed`

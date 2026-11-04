@@ -35,7 +35,10 @@ class ModelRegistry:
             return ModelManifest.model_validate(item) if item is not None else None
 
     def register(self, manifest: ModelManifest) -> ModelManifest:
-        artifact = Path(manifest.local_path).expanduser().resolve()
+        candidate = Path(manifest.local_path).expanduser()
+        if candidate.is_symlink():
+            raise ModelRegistryError("model artifact cannot be a symbolic link")
+        artifact = candidate.resolve()
         try:
             artifact.relative_to(self.storage_dir)
         except ValueError as exc:

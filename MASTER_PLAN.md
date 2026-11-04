@@ -4,7 +4,7 @@
 >
 > **Current project status:** Planning baseline recorded. No application implementation has been verified yet.
 > **Last reviewed:** 2026-11-04
-> **Plan version:** 1.0.0
+> **Plan version:** 1.1.0
 > **Default branch:** `main`
 
 ---
@@ -229,6 +229,8 @@ State transitions must be explicit and validated. Terminal states must not silen
 ---
 
 ## 5. Development roadmap and master checklist
+
+> **Detailed feature inventory:** The exhaustive feature-by-feature register is maintained in [FEATURE_CATALOG.md](./FEATURE_CATALOG.md). It is part of this plan and must be read alongside this roadmap. Every known feature, sub-feature, edge case, configuration, permission, failure mode, test, and release gate must have a stable ID there. The roadmap defines sequencing; the catalog defines detailed coverage.
 
 **Status legend:** `TODO` = not started; `IN_PROGRESS` = actively being implemented; `BLOCKED` = waiting on a dependency/decision; `DONE` = verified against its acceptance criteria; `DEFERRED` = intentionally moved out of current release.
 
@@ -557,6 +559,7 @@ Append newest entries at the top. Keep entries factual and link them to task IDs
 
 | Date | Change ID | Type | Summary / reason | Affected area | Approval | Verification / commit |
 |---|---|---|---|---|---|---|
+| 2026-11-04 | CHG-0002 | ADD | Add exhaustive feature/sub-feature inventory with stable IDs, scope labels, acceptance workflow catalogue, release gates, and feature-change template. | Product specification and quality coverage | Requested by repository owner in chat | FEATURE_CATALOG.md created; implementation not performed |
 | 2026-11-04 | CHG-0001 | ADD | Create initial master plan, roadmap, checklists, security baseline, acceptance catalogue, and strict change-control rules. | Project governance | Requested by repository owner in chat | Plan file creation; implementation not performed |
 
 ### Change entry template
@@ -586,6 +589,7 @@ Update this dashboard whenever a task status changes or a phase gate is evaluate
 | Metric | Current value |
 |---|---:|
 | Phases defined | 10 (Phase 0–9) |
+| Detailed feature inventory | Added in FEATURE_CATALOG.md |
 | Implementation tasks checked complete | 0 |
 | Implementation tasks pending | All except baseline record P0-01 |
 | Security controls verified | 0 |
@@ -631,7 +635,19 @@ Do these in order. Do not start feature implementation until Phase 0 decisions a
 
 ---
 
-## 16. How to read project status
+## 16. Exhaustive feature coverage requirement
+
+The master roadmap and [FEATURE_CATALOG.md](./FEATURE_CATALOG.md) form one combined plan. Neither may be treated as optional.
+
+- Every planned capability must be represented by a stable feature/task ID.
+- Every feature must list sub-features, configuration, normal behavior, error behavior, edge cases, permissions, dependencies, acceptance criteria, and tests where applicable.
+- Implementation batches must reference both roadmap task IDs and feature IDs.
+- A discovered omission must be added to FEATURE_CATALOG.md and recorded in this plan's change log before or in the same batch as implementation.
+- Additions, modifications, removals, and deferrals require the feature change template and the approval rules in Section 11.
+- Do not claim that the plan predicts every conceivable future request. Instead, maintain an explicit intake-and-audit process so newly discovered requirements are captured before implementation.
+- Before release, complete the inventory audit in Section 24 of FEATURE_CATALOG.md and reconcile every V1 item with code, tests, documentation, or an explicitly approved waiver.
+
+## 17. How to read project status
 
 - **What is done?** Look at checked task IDs, then confirm their evidence in the change log.
 - **What is being worked on?** Look for `IN_PROGRESS` status and the current position section.

@@ -169,6 +169,7 @@
  let selectedCoworker="",pendingCoworkerPlan=null,coworkerBusy=false,coworkerHistory=[];
  const roleDescriptions={Researcher:"Researcher",Builder:"Builder",Auditor:"Auditor",Writer:"Writer"};
  function resetCoworkerConversation(){
+  if(coworkerBusy){toast("Wait for the current Coworker turn to finish.");return}
   if(pendingCoworkerPlan){api("/api/v1/coworkers/cancel",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan})}).catch(()=>{});}
   pendingCoworkerPlan=null;coworkerHistory=[];
   $("coworkerConversation").innerHTML='<div class="chat-empty">Conversation cleared. What should I help you with?</div>';
@@ -176,6 +177,7 @@
  }
  $("coworkerReset").addEventListener("click",resetCoworkerConversation);
  document.querySelectorAll(".coworker-use").forEach(button=>button.addEventListener("click",()=>{
+  if(coworkerBusy){toast("Wait for the current Coworker turn to finish.");return}
   const next=button.dataset.role;
   if(selectedCoworker&&selectedCoworker!==next&&coworkerHistory.length&&!window.confirm("Switch Coworker and start a fresh conversation?"))return;
   if(selectedCoworker!==next)resetCoworkerConversation();
@@ -246,14 +248,14 @@
   coworkerBusy=true;if(button){button.disabled=true;button.textContent="Running…"}
   try{
    const result=await api("/api/v1/coworkers/execute",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan,approved:true})});
-   pendingCoworkerPlan=null;
+   pendingCoworkerPlan=null;if(button)button.textContent="Executed";
    const report=(result.results||[]).map((r,i)=>(i+1)+". "+(r.kind||"Action")+" · "+(r.status||("exit "+r.return_code))+"\n"+[r.path||"",r.stdout||"",r.stderr||"",r.error||""].filter(Boolean).join("\n")).join("\n\n");
    const summary="Execution "+result.status+".\n"+(report||"No execution actions were required.")+"\nReview the project and test results.";
    const body=appendCoworkerMessage("assistant",summary);
    coworkerHistory.push({role:"assistant",content:summary});coworkerHistory=coworkerHistory.slice(-12);
    body.scrollIntoView({behavior:"smooth",block:"nearest"});
    toast("Coworker execution finished");loadWorkspaceStatus();
-  }catch(e){pendingCoworkerPlan=null;toast(e.message);appendCoworkerMessage("assistant","Execution failed: "+e.message)}
+  }catch(e){pendingCoworkerPlan=null;if(button)button.textContent="Execution failed";toast(e.message);appendCoworkerMessage("assistant","Execution failed: "+e.message)}
   finally{coworkerBusy=false;$("coworkerPlan").disabled=false;$("coworkerTask").focus()}
  }
  async function cancelCoworkerPlan(card){

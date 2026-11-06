@@ -120,3 +120,17 @@ uv run mypy src/noodles
 uv run pip-audit --skip-editable
 uv run pytest
 ```
+
+
+## Windows desktop installer
+
+A Windows x64 desktop window and small online bootstrapper are being prepared. The bootstrapper downloads the versioned desktop package from GitHub Releases, verifies its SHA-256 checksum, installs it per-user, and creates a desktop shortcut. Release/build details and limitations are documented in [Windows Desktop Installer](docs/WINDOWS_DESKTOP.md).
+
+For a developer smoke test on Windows with Python 3.12 and uv:
+
+```powershell
+uv sync --extra desktop
+uv run noodles-desktop
+```
+
+The desktop shell packages the current API and UI, but GGUF models are intentionally separate downloads. A compatible `llama-cpp-python` runtime and model are still required for local inference; the desktop package does not claim to include them.

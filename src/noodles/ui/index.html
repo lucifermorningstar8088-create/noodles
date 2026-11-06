@@ -212,11 +212,12 @@
     (a.argv?'<pre>'+esc(a.argv.join(" "))+'</pre>':'')+
     (a.content!==undefined?'<pre>'+esc(a.content.slice(0,2500))+(a.content.length>2500?"\\n… preview shortened":"")+'</pre>':'')+
     '</div>').join(""):'<div class="plan-status">No changes proposed. This turn is read-only.</div>')+
-   (actions.length?'<div class="plan-buttons"><button class="approve-btn" id="approveCoworkerPlan">Approve & run</button><button class="cancel-btn" id="cancelCoworkerPlan">Cancel plan</button></div>':'<button class="cancel-btn" id="cancelCoworkerPlan">Close</button>')+
+   (actions.length?'<div class="plan-buttons"><button class="approve-btn approveCoworkerPlan">Approve & run</button><button class="cancel-btn cancelCoworkerPlan">Cancel plan</button></div>':'<button class="cancel-btn cancelCoworkerPlan">Dismiss</button>')+
    '<div class="plan-status">Only the listed actions can be approved. Review every command and file change.</div>';
   body.append(card);
-  const approve=$("approveCoworkerPlan");if(approve)approve.addEventListener("click",executeCoworkerPlan);
-  $("cancelCoworkerPlan").addEventListener("click",cancelCoworkerPlan);
+  const approve=card.querySelector(".approveCoworkerPlan");
+  if(approve)approve.addEventListener("click",()=>executeCoworkerPlan(approve));
+  card.querySelector(".cancelCoworkerPlan").addEventListener("click",()=>cancelCoworkerPlan(card));
   $("coworkerPlan").disabled=actions.length>0;
  }
  async function planCoworkerTask(){
@@ -239,10 +240,10 @@
   }catch(e){pending.textContent="I couldn't complete that turn. "+e.message;toast(e.message)}
   finally{coworkerBusy=false;$("coworkerPlan").textContent="Send ↑";$("coworkerPlan").disabled=!!pendingCoworkerPlan;$("coworkerTask").focus()}
  }
- async function executeCoworkerPlan(){
+ async function executeCoworkerPlan(button){
   if(!pendingCoworkerPlan||coworkerBusy)return;
   if(!window.confirm("Approve all listed file writes and terminal commands on this PC? Review the plan carefully before continuing."))return;
-  coworkerBusy=true;const button=$("approveCoworkerPlan");if(button){button.disabled=true;button.textContent="Running…"}
+  coworkerBusy=true;if(button){button.disabled=true;button.textContent="Running…"}
   try{
    const result=await api("/api/v1/coworkers/execute",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan,approved:true})});
    pendingCoworkerPlan=null;
@@ -255,10 +256,12 @@
   }catch(e){pendingCoworkerPlan=null;toast(e.message);appendCoworkerMessage("assistant","Execution failed: "+e.message)}
   finally{coworkerBusy=false;$("coworkerPlan").disabled=false;$("coworkerTask").focus()}
  }
- async function cancelCoworkerPlan(){
-  if(pendingCoworkerPlan){try{await api("/api/v1/coworkers/cancel",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan})})}catch(e){}}
+ async function cancelCoworkerPlan(card){
+  if(pendingCoworkerPlan){
+   try{await api("/api/v1/coworkers/cancel",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan})})}catch(e){}
+   if(card)card.innerHTML='<div class="plan-status">Plan cancelled. No proposed actions were executed.</div>';
+  }else if(card){card.remove()}
   pendingCoworkerPlan=null;$("coworkerPlan").disabled=false;
-  appendCoworkerMessage("assistant","Plan cancelled. No proposed actions were executed.");
  }
  $("coworkerPlan").addEventListener("click",planCoworkerTask);
  $("coworkerTask").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("coworkerPlan").click()}});

@@ -191,7 +191,18 @@ internal sealed class BootstrapperForm : Form
             if (asset == null) continue;
             if (String.Equals(Convert.ToString(asset.ContainsKey("name") ? asset["name"] : ""),
                 name, StringComparison.OrdinalIgnoreCase))
-                return Convert.ToString(asset.ContainsKey("browser_download_url") ? asset["browser_download_url"] : "");
+            {
+                string url = Convert.ToString(
+                    asset.ContainsKey("browser_download_url") ? asset["browser_download_url"] : "");
+                Uri parsed;
+                string expectedPrefix = "/" + Repository + "/releases/download/";
+                if (!Uri.TryCreate(url, UriKind.Absolute, out parsed) ||
+                    !String.Equals(parsed.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                    !String.Equals(parsed.Host, "github.com", StringComparison.OrdinalIgnoreCase) ||
+                    !parsed.AbsolutePath.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("A release asset URL failed validation.");
+                return url;
+            }
         }
         return "";
     }

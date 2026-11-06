@@ -29,7 +29,7 @@ def _show_error(message: str) -> None:
         try:
             import ctypes
 
-            getattr(ctypes, "windll").user32.MessageBoxW(0, message, "Noodles", 0x10)
+            ctypes.WinDLL("user32").MessageBoxW(0, message, "Noodles", 0x10)
             return
         except (AttributeError, OSError):
             pass

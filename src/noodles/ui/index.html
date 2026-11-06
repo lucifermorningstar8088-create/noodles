@@ -93,7 +93,7 @@
      <div class="workbench-actions"><span class="composer-hint">It inspects files first, then shows a plan for your approval.</span><button class="send" id="coworkerPlan">Plan task ↗</button></div>
      <div id="coworkerPlanResult" class="plan-result" hidden></div>
     </div>
-    <div class="coworker-note"><strong>Permission model</strong><br>File reads stay inside the configured workspace. File writes and terminal commands are proposed first and run only after you approve the plan. Commands use an argument array, never a shell. No cloud execution or model fallback.</div>
+    <div class="coworker-note"><strong>Permission model</strong><br>File reads and file writes stay inside the configured workspace. Commands use an argument array, never a shell, and require approval. Important: approved Python/Node/Git processes run with your Windows user permissions and are not OS-sandboxed. Review every command and code preview. No cloud execution or model fallback.</div>
    </section>
   </section>
   <section class="view" id="view-models">

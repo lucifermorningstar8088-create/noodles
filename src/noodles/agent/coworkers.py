@@ -32,7 +32,7 @@ class CoworkerAction(BaseModel):
     argv: list[str] = Field(default_factory=list, max_length=32)
 
     @model_validator(mode="after")
-    def validate_action_shape(self) -> "CoworkerAction":
+    def validate_action_shape(self) -> CoworkerAction:
         if self.kind == "write_file":
             if not self.path or self.content is None or self.argv:
                 raise ValueError("write_file requires path and content only")

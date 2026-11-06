@@ -31,6 +31,8 @@ class Settings(BaseSettings):
         default=200_000_000_000, ge=1_000_000, le=2_000_000_000_000
     )
     skills_dir: Path = Field(default_factory=lambda: Path.home() / ".noodles" / "skills")
+    workspace_dir: Path = Field(default_factory=lambda: Path.home() / ".noodles" / "workspace")
+    workspace_command_timeout_seconds: int = Field(default=120, ge=5, le=300)
     mcp_registry_path: Path = Field(
         default_factory=lambda: Path.home() / ".noodles" / "mcp-servers.json"
     )

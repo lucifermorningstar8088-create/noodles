@@ -9,6 +9,7 @@ from typing import Annotated, Any, Literal
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 
 from noodles import __version__
@@ -386,5 +387,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "llm_execution": "local_only",
             "cloud_llm_fallback": False,
         }
+
+    ui_directory = Path(__file__).with_name("ui")
+    if ui_directory.is_dir():
+        application.mount("/", StaticFiles(directory=ui_directory, html=True), name="ui")
 
     return application

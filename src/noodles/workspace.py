@@ -143,13 +143,13 @@ class WorkspaceManager:
                 shell=False,
             )
         except subprocess.TimeoutExpired as exc:
-            stdout = (exc.stdout or "")
-            stderr = (exc.stderr or "")
+            stdout = exc.stdout or ""
+            stderr = exc.stderr or ""
             return {
                 "argv": argv,
                 "return_code": None,
                 "timed_out": True,
-                "stdout": str(stdout)[-self.MAX_OUTPUT_CHARS:],
+                "stdout": str(stdout)[-self.MAX_OUTPUT_CHARS :],
                 "stderr": str(stderr)[-self.MAX_OUTPUT_CHARS:],
             }
         except (OSError, ValueError) as exc:

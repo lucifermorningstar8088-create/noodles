@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
 import os
 import socket
@@ -28,7 +29,7 @@ def _show_error(message: str) -> None:
         try:
             import ctypes
 
-            ctypes.windll.user32.MessageBoxW(0, message, "Noodles", 0x10)
+            getattr(ctypes, "windll").user32.MessageBoxW(0, message, "Noodles", 0x10)
             return
         except (AttributeError, OSError):
             pass
@@ -62,7 +63,7 @@ def run() -> None:
     server_thread: threading.Thread | None = None
     listener: socket.socket | None = None
     try:
-        import webview
+        webview = importlib.import_module("webview")
 
         listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

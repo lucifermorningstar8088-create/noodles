@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 
 from noodles import __version__
+from noodles.agent.coworkers import CoworkerError, CoworkerManager
 from noodles.agent.orchestrator import AgentError, AgentOrchestrator
 from noodles.config import Settings, get_settings
 from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
@@ -23,6 +24,7 @@ from noodles.models.registry import ModelRegistry
 from noodles.models.runtime import NativeModelRuntime, NativeRuntimeUnavailable
 from noodles.skills.manager import SkillError, SkillManager
 from noodles.tools.registry import LocalToolRegistry
+from noodles.workspace import WorkspaceError, WorkspaceManager
 
 
 class SkillInstallRequest(BaseModel):
@@ -80,6 +82,23 @@ class AgentChatRequest(BaseModel):
         return self
 
 
+class CoworkerPlanRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    role: Literal["Researcher", "Builder", "Auditor", "Writer"]
+    task: str = Field(min_length=1, max_length=12000)
+
+
+class CoworkerExecuteRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    plan_id: str = Field(min_length=20, max_length=100)
+    approved: bool = False
+
+
+class CoworkerCancelRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    plan_id: str = Field(min_length=20, max_length=100)
+
+
 class LocalChatRequest(BaseModel):
     """Strictly local inference request; no provider or fallback selector exists."""
 
@@ -112,6 +131,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     mcp_registry = MCPServerRegistry(runtime_settings.mcp_registry_path)
     mcp_manager = MCPManager(mcp_registry)
     agent = AgentOrchestrator(model_runtime, skill_manager, local_tool_registry, mcp_manager)
+    workspace_manager = WorkspaceManager(
+        runtime_settings.workspace_dir,
+        command_timeout=runtime_settings.workspace_command_timeout_seconds,
+    )
+    coworker_manager = CoworkerManager(model_runtime, workspace_manager)
     application = FastAPI(
         title=runtime_settings.app_name,
         version=__version__,
@@ -126,6 +150,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.mcp_registry = mcp_registry
     application.state.mcp_manager = mcp_manager
     application.state.agent = agent
+    application.state.workspace_manager = workspace_manager
+    application.state.coworker_manager = coworker_manager
 
     if runtime_settings.api_auth_token is not None:
         expected_token = runtime_settings.api_auth_token.get_secret_value()
@@ -372,6 +398,43 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return await mcp_manager.call_tool(name, tool_name, request.arguments)
         except MCPError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    @application.get("/api/v1/workspace", tags=["workspace"])
+    def workspace_status() -> dict[str, Any]:
+        """Return the configured local workspace root and a bounded file inventory."""
+        return {
+            **workspace_manager.status(),
+            "files": workspace_manager.list_files(),
+            "command_allowlist": sorted(workspace_manager.ALLOWED_COMMANDS),
+        }
+
+    @application.post("/api/v1/coworkers/plan", tags=["coworkers"])
+    def plan_coworker_task(request: CoworkerPlanRequest) -> dict[str, Any]:
+        """Inspect the local workspace and prepare a proposed change without executing it."""
+        try:
+            return coworker_manager.plan(request.role, request.task)
+        except NativeRuntimeUnavailable as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except CoworkerError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except WorkspaceError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @application.post("/api/v1/coworkers/execute", tags=["coworkers"])
+    def execute_coworker_plan(request: CoworkerExecuteRequest) -> dict[str, Any]:
+        """Execute one pending local Coworker plan only after explicit user approval."""
+        try:
+            return coworker_manager.execute(request.plan_id, request.approved)
+        except CoworkerError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @application.post("/api/v1/coworkers/cancel", tags=["coworkers"])
+    def cancel_coworker_plan(request: CoworkerCancelRequest) -> dict[str, str]:
+        """Discard a pending Coworker plan without executing it."""
+        try:
+            return coworker_manager.cancel(request.plan_id)
+        except CoworkerError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @application.get("/api/v1/health", tags=["system"])
     def health() -> dict[str, str]:

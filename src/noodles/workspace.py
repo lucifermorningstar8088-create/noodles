@@ -76,9 +76,7 @@ class WorkspaceManager:
                 if (
                     name not in ignored
                     and not name.startswith(".")
-                    and not any(
-                        fragment in name.lower() for fragment in sensitive_fragments
-                    )
+                    and not any(fragment in name.lower() for fragment in sensitive_fragments)
                     and not (Path(current) / name).is_symlink()
                 )
             )

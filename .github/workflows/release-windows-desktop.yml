@@ -70,7 +70,7 @@ jobs:
             /reference:System.IO.Compression.dll `
             /reference:System.IO.Compression.FileSystem.dll `
             /reference:Microsoft.CSharp.dll `
-            installer/Bootstrapper.cs
+            (Join-Path $env:GITHUB_WORKSPACE "installer\\Bootstrapper.cs")
           if ($LASTEXITCODE -ne 0) { throw "Bootstrapper compilation failed with exit code $LASTEXITCODE." }
 
       - name: Upload build artifacts

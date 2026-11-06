@@ -231,7 +231,7 @@
   try{
    const data=await api("/api/v1/coworkers/plan",{method:"POST",body:JSON.stringify({role:selectedCoworker,task,history:previousHistory})});
    pending.textContent=data.response||data.summary||"I have reviewed the request.";
-   const bubble=pending.parentElement;
+   const bubble=pending;
    coworkerHistory.push({role:"user",content:task},{role:"assistant",content:(data.response||data.summary||"")});
    coworkerHistory=coworkerHistory.slice(-12);
    renderCoworkerPlan(data,bubble);
@@ -252,7 +252,7 @@
    coworkerHistory.push({role:"assistant",content:summary});coworkerHistory=coworkerHistory.slice(-12);
    body.scrollIntoView({behavior:"smooth",block:"nearest"});
    toast("Coworker execution finished");loadWorkspaceStatus();
-  }catch(e){toast(e.message);appendCoworkerMessage("assistant","Execution failed: "+e.message)}
+  }catch(e){pendingCoworkerPlan=null;toast(e.message);appendCoworkerMessage("assistant","Execution failed: "+e.message)}
   finally{coworkerBusy=false;$("coworkerPlan").disabled=false;$("coworkerTask").focus()}
  }
  async function cancelCoworkerPlan(){

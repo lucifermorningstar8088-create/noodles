@@ -210,7 +210,7 @@
    (actions.length?actions.map((a,i)=>'<div class="plan-action"><strong>'+(i+1)+'. '+esc(a.kind==="write_file"?"WRITE FILE":"RUN COMMAND")+'</strong><p>'+esc(a.reason)+'</p>'+
     (a.path?'<p>Path: <code>'+esc(a.path)+'</code></p>':'')+
     (a.argv?'<pre>'+esc(a.argv.join(" "))+'</pre>':'')+
-    (a.content!==undefined?'<pre>'+esc(a.content.slice(0,2500))+(a.content.length>2500?"\\n… preview shortened":"")+'</pre>':'')+
+    (a.content!==undefined?'<pre>'+esc(a.content.slice(0,2500))+(a.content.length>2500?"\n… preview shortened":"")+'</pre>':'')+
     '</div>').join(""):'<div class="plan-status">No changes proposed. This turn is read-only.</div>')+
    (actions.length?'<div class="plan-buttons"><button class="approve-btn approveCoworkerPlan">Approve & run</button><button class="cancel-btn cancelCoworkerPlan">Cancel plan</button></div>':'<button class="cancel-btn cancelCoworkerPlan">Dismiss</button>')+
    '<div class="plan-status">Only the listed actions can be approved. Review every command and file change.</div>';
@@ -247,8 +247,8 @@
   try{
    const result=await api("/api/v1/coworkers/execute",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan,approved:true})});
    pendingCoworkerPlan=null;
-   const report=(result.results||[]).map((r,i)=>(i+1)+". "+(r.kind||"Action")+" · "+(r.status||("exit "+r.return_code))+"\\n"+[r.path||"",r.stdout||"",r.stderr||"",r.error||""].filter(Boolean).join("\\n")).join("\\n\\n");
-   const summary="Execution "+result.status+".\\n"+(report||"No execution actions were required.")+"\\nReview the project and test results.";
+   const report=(result.results||[]).map((r,i)=>(i+1)+". "+(r.kind||"Action")+" · "+(r.status||("exit "+r.return_code))+"\n"+[r.path||"",r.stdout||"",r.stderr||"",r.error||""].filter(Boolean).join("\n")).join("\n\n");
+   const summary="Execution "+result.status+".\n"+(report||"No execution actions were required.")+"\nReview the project and test results.";
    const body=appendCoworkerMessage("assistant",summary);
    coworkerHistory.push({role:"assistant",content:summary});coworkerHistory=coworkerHistory.slice(-12);
    body.scrollIntoView({behavior:"smooth",block:"nearest"});

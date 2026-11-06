@@ -109,9 +109,13 @@ class WorkspaceManager:
         return {"path": relative_path, "bytes_written": len(content.encode("utf-8"))}
 
     def run_command(self, argv: list[str]) -> dict[str, Any]:
-        if (\n            not argv\n            or len(argv) > 32\n            or any(not isinstance(arg, str) or len(arg) > 2000 for arg in argv)\n        ):
+        if (
+            not argv
+            or len(argv) > 32
+            or any(not isinstance(arg, str) or len(arg) > 2000 for arg in argv)
+        ):
             raise WorkspaceError("command must be an argument array with at most 32 arguments")
-        if any("\\x00" in arg for arg in argv):
+        if any("\x00" in arg for arg in argv):
             raise WorkspaceError("command arguments cannot contain NUL characters")
         executable = Path(argv[0]).name.lower()
         if executable.endswith(".exe"):

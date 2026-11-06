@@ -98,7 +98,6 @@ def test_coworker_plan_requires_approval_before_file_write(tmp_path: Path) -> No
         manager.execute(plan["plan_id"], approved=True)
 
 
-
 def test_coworker_receives_bounded_conversation_context(tmp_path: Path) -> None:
     root = tmp_path / "workspace"
     root.mkdir()

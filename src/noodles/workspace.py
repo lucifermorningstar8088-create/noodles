@@ -111,7 +111,11 @@ class WorkspaceManager:
     def run_command(self, argv: list[str]) -> dict[str, Any]:
         if not argv or len(argv) > 32 or any(not isinstance(arg, str) or len(arg) > 2000 for arg in argv):
             raise WorkspaceError("command must be an argument array with at most 32 arguments")
+        if any("\\x00" in arg for arg in argv):
+            raise WorkspaceError("command arguments cannot contain NUL characters")
         executable = Path(argv[0]).name.lower()
+        if executable.endswith(".exe"):
+            executable = executable[:-4]
         if executable not in self.ALLOWED_COMMANDS:
             raise WorkspaceError("command executable is not in the local allowlist")
         resolved_executable = shutil.which(argv[0])
@@ -139,7 +143,7 @@ class WorkspaceManager:
                 "stdout": str(stdout)[-self.MAX_OUTPUT_CHARS:],
                 "stderr": str(stderr)[-self.MAX_OUTPUT_CHARS:],
             }
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             raise WorkspaceError("local command could not be started") from exc
         return {
             "argv": argv,

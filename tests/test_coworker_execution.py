@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from noodles.agent.coworkers import CoworkerManager
+from noodles.agent.coworkers import CoworkerError, CoworkerManager
 from noodles.workspace import WorkspaceError, WorkspaceManager
 
 
@@ -81,7 +81,7 @@ def test_coworker_plan_requires_approval_before_file_write(tmp_path: Path) -> No
 
     assert plan["requires_approval"] is True
     assert not target.exists()
-    with pytest.raises(Exception):
+    with pytest.raises(CoworkerError):
         manager.execute(plan["plan_id"], approved=False)
     assert not target.exists()
 
@@ -89,5 +89,5 @@ def test_coworker_plan_requires_approval_before_file_write(tmp_path: Path) -> No
 
     assert result["status"] == "completed"
     assert target.read_text(encoding="utf-8") == "Created by an approved local Coworker.\n"
-    with pytest.raises(Exception):
+    with pytest.raises(CoworkerError):
         manager.execute(plan["plan_id"], approved=True)

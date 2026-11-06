@@ -22,6 +22,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+desktop = [
+  "pywebview>=5.4,<6.0",
+  "pyinstaller>=6.11,<7.0",
+]
 dev = [
   "mypy>=1.15,<2.0",
   "types-PyYAML>=6.0,<7.0",
@@ -32,6 +36,7 @@ dev = [
 
 [project.scripts]
 noodles-api = "noodles.main:run"
+noodles-desktop = "noodles.desktop:run"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

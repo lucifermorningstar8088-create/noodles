@@ -50,9 +50,15 @@ class ActionPlan(BaseModel):
 
 
 ROLE_GUIDANCE = {
-    "Researcher": (\n        "Investigate the local project and produce evidence-based findings. "\n        "Do not invent facts."\n    ),
+    "Researcher": (
+        "Investigate the local project and produce evidence-based findings. "
+        "Do not invent facts."
+    ),
     "Builder": "Implement the requested software change cleanly, with tests and maintainable code.",
-    "Auditor": (\n        "Inspect for correctness, security, edge cases, and test coverage. " \n        "Prefer fixes with evidence."\n    ),
+    "Auditor": (
+        "Inspect for correctness, security, edge cases, and test coverage. "
+        "Prefer fixes with evidence."
+    ),
     "Writer": "Create or improve clear project documentation and user-facing technical writing.",
 }
 
@@ -118,7 +124,9 @@ class CoworkerManager:
         inspected: dict[str, str] = {}
         for path in inspection.inspect_paths:
             if path not in allowed_paths or path.startswith(".") or "/." in path:
-                raise CoworkerError(\n                    "inspection planner selected a path outside the visible project inventory"\n                )
+                raise CoworkerError(
+                    "inspection planner selected a path outside the visible project inventory"
+                )
             try:
                 inspected[path] = self.workspace.read_file(path)[:20000]
             except WorkspaceError as exc:

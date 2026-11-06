@@ -54,7 +54,11 @@ class WorkspaceManager:
         return {"root": str(self.root), "exists": self.root.is_dir(), "local_only": True}
 
     def list_files(self) -> list[dict[str, Any]]:
-        ignored = {".git", ".venv", "venv", "node_modules", "__pycache__", ".mypy_cache"}
+        ignored = {
+            ".git", ".venv", "venv", "node_modules", "__pycache__",
+            ".mypy_cache", ".ssh", ".aws", ".config", "secrets", "credentials",
+        }
+        sensitive_fragments = ("secret", "credential", "token", "password", "passwd", "private")
         output: list[dict[str, Any]] = []
         for current, dirs, files in os.walk(self.root, followlinks=False):
             dirs[:] = sorted(
@@ -67,7 +71,9 @@ class WorkspaceManager:
                 )
             )
             for name in sorted(files):
-                if name.startswith("."):
+                if name.startswith(".") or any(
+                    fragment in name.lower() for fragment in sensitive_fragments
+                ):
                     continue
                 path = Path(current) / name
                 if path.is_symlink():
@@ -130,10 +136,19 @@ class WorkspaceManager:
         resolved_executable = shutil.which(argv[0])
         if not resolved_executable:
             raise WorkspaceError(f"command executable is not installed: {executable}")
+        safe_env_names = {
+            "PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR", "TEMP", "TMP",
+            "TMPDIR", "LANG", "LC_ALL", "APPDATA", "LOCALAPPDATA", "HOMEDRIVE",
+            "HOMEPATH", "PATHEXT", "VIRTUAL_ENV", "UV_CACHE_DIR",
+        }
+        child_env = {
+            key: value for key, value in os.environ.items() if key in safe_env_names
+        }
         try:
             completed = subprocess.run(
                 [resolved_executable, *argv[1:]],
                 cwd=self.root,
+                env=child_env,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",

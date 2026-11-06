@@ -17,7 +17,7 @@ import uvicorn
 
 def _log_path() -> Path:
     """Return a per-user log path without writing into the installation directory."""
-    root = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Noodles" / "logs"
+    root = Path(os.environ.get("LOCALAPPDATA") or str(Path.home())) / "Noodles" / "logs"
     root.mkdir(parents=True, exist_ok=True)
     return root / "desktop.log"
 

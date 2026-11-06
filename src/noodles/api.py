@@ -86,6 +86,15 @@ class CoworkerPlanRequest(BaseModel):
     model_config = {"extra": "forbid"}
     role: Literal["Researcher", "Builder", "Auditor", "Writer"]
     task: str = Field(min_length=1, max_length=12000)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
+
+    @model_validator(mode="after")
+    def validate_coworker_history(self) -> CoworkerPlanRequest:
+        if any(item.role == "system" for item in self.history):
+            raise ValueError("Coworker history cannot contain system messages")
+        if sum(len(item.content) for item in self.history) > 60000:
+            raise ValueError("combined Coworker history must not exceed 60000 characters")
+        return self
 
 
 class CoworkerExecuteRequest(BaseModel):
@@ -412,7 +421,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def plan_coworker_task(request: CoworkerPlanRequest) -> dict[str, Any]:
         """Inspect the local workspace and prepare a proposed change without executing it."""
         try:
-            return coworker_manager.plan(request.role, request.task)
+            return coworker_manager.plan(
+                request.role,
+                request.task,
+                history=[item.model_dump() for item in request.history],
+            )
         except NativeRuntimeUnavailable as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         except CoworkerError as exc:

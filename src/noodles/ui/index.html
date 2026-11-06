@@ -24,7 +24,16 @@
 .coworker-type{font-size:9px;letter-spacing:.13em;color:#99948b;font-weight:700}.coworker-card h3{font-size:16px;font-weight:620;margin:5px 0}.coworker-card p{font-size:12px;color:#817d75;line-height:1.6;margin:0 0 18px}.coworker-use{margin-top:auto;border:0;background:transparent;padding:0;color:#a65c3e;font-size:11px;font-weight:650}.coworker-use span{margin-left:5px}
 .coworker-note{max-width:760px;margin:16px auto;background:#f4f1eb;border:1px solid #eae5dc;border-radius:11px;padding:13px 15px;font-size:11px;line-height:1.65;color:#777166}.coworker-note strong{color:#49453e}
 
-.coworker-workbench{max-width:760px;margin:16px auto}.workbench-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:18px}.workbench-head h3{font-size:18px;margin:6px 0 2px}.workbench-head p{font-size:11px;color:var(--muted);margin:0;overflow-wrap:anywhere}.task-label{display:block;font-size:12px;font-weight:650;margin-bottom:8px}.coworker-workbench textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:13px;line-height:1.6}.workbench-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}.plan-result{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}.plan-summary{font-size:13px;font-weight:650;margin-bottom:8px}.plan-action{border:1px solid var(--line);border-radius:10px;padding:11px;margin:8px 0;background:#fcfbf9}.plan-action strong{font-size:11px}.plan-action p{font-size:11px;color:var(--muted);margin:5px 0}.plan-action pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:170px;overflow:auto;background:#f2f0eb;padding:9px;border-radius:7px;font:10px/1.5 ui-monospace,monospace}.plan-buttons{display:flex;gap:8px;margin-top:13px}.approve-btn{border:0;border-radius:9px;background:#4f8068;color:white;padding:9px 13px;font-size:12px;font-weight:650}.cancel-btn{border:1px solid var(--line);border-radius:9px;background:white;color:#6f6a61;padding:9px 13px;font-size:12px}.plan-status{font-size:11px;color:var(--muted);margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.coworker-workbench{max-width:760px;margin:16px auto}.workbench-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:18px}.workbench-head h3{font-size:18px;margin:6px 0 2px}.workbench-head p{font-size:11px;color:var(--muted);margin:0;overflow-wrap:anywhere}.task-label{display:block;font-size:12px;font-weight:650;margin-bottom:8px}.coworker-workbench textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:13px;line-height:1.6}
+.coworker-conversation{display:grid;gap:14px;margin:16px 0;max-height:460px;overflow:auto;padding:2px 2px 12px}
+.coworker-message{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start}
+.coworker-message .avatar{width:27px;height:27px;font-size:10px}
+.coworker-message.user .coworker-message-body{background:#efeee9;border-radius:12px;padding:10px 13px}
+.coworker-message.assistant .avatar{background:#f0dfd5;color:#99583d}
+.coworker-message-body{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7;padding-top:3px}
+.coworker-message-meta{font-size:10px;color:#9b978f;margin-bottom:4px}
+.coworker-message .plan-result{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.workbench-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}.plan-result{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}.plan-summary{font-size:13px;font-weight:650;margin-bottom:8px}.plan-action{border:1px solid var(--line);border-radius:10px;padding:11px;margin:8px 0;background:#fcfbf9}.plan-action strong{font-size:11px}.plan-action p{font-size:11px;color:var(--muted);margin:5px 0}.plan-action pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:170px;overflow:auto;background:#f2f0eb;padding:9px;border-radius:7px;font:10px/1.5 ui-monospace,monospace}.plan-buttons{display:flex;gap:8px;margin-top:13px}.approve-btn{border:0;border-radius:9px;background:#4f8068;color:white;padding:9px 13px;font-size:12px;font-weight:650}.cancel-btn{border:1px solid var(--line);border-radius:9px;background:white;color:#6f6a61;padding:9px 13px;font-size:12px}.plan-status{font-size:11px;color:var(--muted);margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:12;left:-270px;width:258px;transition:left .2s;box-shadow:var(--shadow)}.sidebar.open{left:0}.mobile-menu{display:grid}.topbar{padding:0 15px;height:56px}.content{padding:28px 17px}.welcome{margin:42px auto 0}.welcome h1{letter-spacing:-1.5px}.suggestions{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.mode-pill{display:none}}
 @media(max-width:420px){.cards{grid-template-columns:1fr}.welcome h1{font-size:34px}.composer-foot{align-items:flex-end}.composer-hint{max-width:130px}}
 </style>
@@ -87,10 +96,11 @@
      <article class="coworker-card"><div class="coworker-icon write">✎</div><div class="coworker-type">COMMUNICATION</div><h3>Writer</h3><p>Creates and updates documentation inside your local project.</p><button class="coworker-use" data-role="Writer">Choose Writer <span>↗</span></button></article>
     </div>
     <div class="panel coworker-workbench">
-     <div class="workbench-head"><div><div class="eyebrow">LOCAL EXECUTION</div><h3 id="coworkerSelected">Choose a specialist</h3><p id="workspaceRoot">Checking your configured project folder…</p></div><span class="tag good">Runs on this PC</span></div>
-     <label class="task-label" for="coworkerTask">What should this Coworker do?</label>
-     <textarea id="coworkerTask" rows="4" placeholder="Example: Inspect this project, fix the failing tests, and explain every change."></textarea>
-     <div class="workbench-actions"><span class="composer-hint">It inspects files first, then shows a plan for your approval.</span><button class="send" id="coworkerPlan">Plan task ↗</button></div>
+     <div class="workbench-head"><div><div class="eyebrow">LOCAL EXECUTION</div><h3 id="coworkerSelected">Choose a specialist</h3><p id="workspaceRoot">Checking your configured project folder…</p></div><button class="soft-btn" id="coworkerReset" type="button">New chat</button></div>
+     <div class="coworker-conversation" id="coworkerConversation" aria-live="polite"><div class="chat-empty">Choose a Coworker and start talking naturally. Ask it to inspect, explain, build, debug, or improve your project.</div></div>
+     <label class="task-label" for="coworkerTask">Message your Coworker</label>
+     <textarea id="coworkerTask" rows="3" placeholder="Tell your Coworker what you want done… (Enter to send, Shift+Enter for a new line)"></textarea>
+     <div class="workbench-actions"><span class="composer-hint">Natural chat · local execution · approval before changes</span><button class="send" id="coworkerPlan">Send ↑</button></div>
      <div id="coworkerPlanResult" class="plan-result" hidden></div>
     </div>
     <div class="coworker-note"><strong>Permission model</strong><br>File reads and file writes stay inside the configured workspace. Commands use an argument array, never a shell, and require approval. Important: approved Python/Node/Git processes run with your Windows user permissions and are not OS-sandboxed. Review every command and code preview. No cloud execution or model fallback.</div>
@@ -156,66 +166,107 @@
  }
  $("workspaceTab").addEventListener("click",()=>setMainTab("workspace"));
  $("coworkersTab").addEventListener("click",()=>setMainTab("coworkers"));
- let selectedCoworker="",pendingCoworkerPlan=null,coworkerBusy=false;
+ let selectedCoworker="",pendingCoworkerPlan=null,coworkerBusy=false,coworkerHistory=[];
  const roleDescriptions={Researcher:"Researcher",Builder:"Builder",Auditor:"Auditor",Writer:"Writer"};
+ function resetCoworkerConversation(){
+  if(coworkerBusy){toast("Wait for the current Coworker turn to finish.");return}
+  if(pendingCoworkerPlan){api("/api/v1/coworkers/cancel",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan})}).catch(()=>{});}
+  pendingCoworkerPlan=null;coworkerHistory=[];
+  $("coworkerConversation").innerHTML='<div class="chat-empty">Conversation cleared. What should I help you with?</div>';
+  $("coworkerTask").value="";
+ }
+ $("coworkerReset").addEventListener("click",resetCoworkerConversation);
  document.querySelectorAll(".coworker-use").forEach(button=>button.addEventListener("click",()=>{
-  selectedCoworker=button.dataset.role;
+  if(coworkerBusy){toast("Wait for the current Coworker turn to finish.");return}
+  const next=button.dataset.role;
+  if(selectedCoworker&&selectedCoworker!==next&&coworkerHistory.length&&!window.confirm("Switch Coworker and start a fresh conversation?"))return;
+  if(selectedCoworker!==next)resetCoworkerConversation();
+  selectedCoworker=next;
   $("coworkerSelected").textContent=roleDescriptions[selectedCoworker];
   $("coworkerTask").focus();
   document.querySelectorAll(".coworker-card").forEach(card=>card.style.borderColor="");
   button.closest(".coworker-card").style.borderColor="var(--accent)";
+  $("coworkerConversation").querySelector(".chat-empty")?.replaceChildren(document.createTextNode("You are chatting with "+selectedCoworker+". Describe the outcome you want in your own words."));
  }));
  async function loadWorkspaceStatus(){
   try{const d=await api("/api/v1/workspace");$("workspaceRoot").textContent=d.root+" · "+(d.files||[]).length+" visible files · local only"}
   catch(e){$("workspaceRoot").textContent="Local workspace unavailable. Start Noodles API on your PC and configure NOODLES_WORKSPACE_DIR."}
  }
- function renderCoworkerPlan(data){
+ function appendCoworkerMessage(role,text){
+  const empty=$("coworkerConversation").querySelector(".chat-empty");if(empty)empty.remove();
+  const row=document.createElement("div");row.className="coworker-message "+role;
+  const avatar=document.createElement("div");avatar.className="avatar";avatar.textContent=role==="user"?"Y":"n";
+  const content=document.createElement("div");content.className="coworker-message-body";
+  const meta=document.createElement("div");meta.className="coworker-message-meta";meta.textContent=role==="user"?"You":selectedCoworker+" · local Coworker";
+  const body=document.createElement("div");body.textContent=text||"";
+  content.append(meta,body);row.append(avatar,content);$("coworkerConversation").append(row);
+  row.scrollIntoView({behavior:"smooth",block:"nearest"});return content;
+ }
+ function renderCoworkerPlan(data,body){
   pendingCoworkerPlan=data.plan_id;
   const actions=data.actions||[];
-  $("coworkerPlanResult").hidden=false;
-  $("coworkerPlanResult").innerHTML='<div class="plan-summary">'+esc(data.summary)+'</div>'+
+  const card=document.createElement("div");card.className="plan-result";
+  card.innerHTML='<div class="plan-summary">'+esc(data.summary)+'</div>'+
    '<div class="plan-status">'+esc(data.response||"")+'</div>'+
    '<div class="plan-status">Inspected: '+esc((data.inspected_paths||[]).join(", ")||"No files selected")+'</div>'+
    (actions.length?actions.map((a,i)=>'<div class="plan-action"><strong>'+(i+1)+'. '+esc(a.kind==="write_file"?"WRITE FILE":"RUN COMMAND")+'</strong><p>'+esc(a.reason)+'</p>'+
     (a.path?'<p>Path: <code>'+esc(a.path)+'</code></p>':'')+
     (a.argv?'<pre>'+esc(a.argv.join(" "))+'</pre>':'')+
     (a.content!==undefined?'<pre>'+esc(a.content.slice(0,2500))+(a.content.length>2500?"\n… preview shortened":"")+'</pre>':'')+
-    '</div>').join(""):'<div class="plan-status">No file changes or terminal commands proposed. This is a read-only result.</div>')+
-   (actions.length?'<div class="plan-buttons"><button class="approve-btn" id="approveCoworkerPlan">Approve & run</button><button class="cancel-btn" id="cancelCoworkerPlan">Cancel plan</button></div>':'<button class="cancel-btn" id="cancelCoworkerPlan">Close plan</button>')+
-   '<div class="plan-status">Approval authorizes only the actions listed above. Commands execute on this PC inside the configured workspace.</div>';
-  const approve=$("approveCoworkerPlan");if(approve)approve.addEventListener("click",executeCoworkerPlan);
-  $("cancelCoworkerPlan").addEventListener("click",cancelCoworkerPlan);
+    '</div>').join(""):'<div class="plan-status">No changes proposed. This turn is read-only.</div>')+
+   (actions.length?'<div class="plan-buttons"><button class="approve-btn approveCoworkerPlan">Approve & run</button><button class="cancel-btn cancelCoworkerPlan">Cancel plan</button></div>':'<button class="cancel-btn cancelCoworkerPlan">Dismiss</button>')+
+   '<div class="plan-status">Only the listed actions can be approved. Review every command and file change.</div>';
+  body.append(card);
+  const approve=card.querySelector(".approveCoworkerPlan");
+  if(approve)approve.addEventListener("click",()=>executeCoworkerPlan(approve));
+  card.querySelector(".cancelCoworkerPlan").addEventListener("click",()=>cancelCoworkerPlan(card));
+  $("coworkerPlan").disabled=actions.length>0;
  }
  async function planCoworkerTask(){
   const task=$("coworkerTask").value.trim();
   if(!selectedCoworker){toast("Choose a Coworker first");return}
-  if(!task){toast("Describe the task first");return}
-  if(coworkerBusy)return;
-  coworkerBusy=true;$("coworkerPlan").disabled=true;$("coworkerPlan").textContent="Inspecting…";$("coworkerPlanResult").hidden=true;
-  try{const data=await api("/api/v1/coworkers/plan",{method:"POST",body:JSON.stringify({role:selectedCoworker,task})});renderCoworkerPlan(data)}
-  catch(e){$("coworkerPlanResult").hidden=false;$("coworkerPlanResult").textContent="Could not prepare a plan: "+e.message;toast(e.message)}
-  finally{coworkerBusy=false;$("coworkerPlan").disabled=false;$("coworkerPlan").textContent="Plan task ↗"}
+  if(!task){toast("Write a message first");return}
+  if(coworkerBusy||pendingCoworkerPlan)return;
+  coworkerBusy=true;$("coworkerPlan").disabled=true;$("coworkerPlan").textContent="Thinking…";
+  const previousHistory=coworkerHistory.slice(-12);
+  appendCoworkerMessage("user",task);$("coworkerTask").value="";
+  const pending=appendCoworkerMessage("assistant","Thinking through your request…");
+  try{
+   const data=await api("/api/v1/coworkers/plan",{method:"POST",body:JSON.stringify({role:selectedCoworker,task,history:previousHistory})});
+   pending.textContent=data.response||data.summary||"I have reviewed the request.";
+   const bubble=pending;
+   coworkerHistory.push({role:"user",content:task},{role:"assistant",content:(data.response||data.summary||"")});
+   coworkerHistory=coworkerHistory.slice(-12);
+   renderCoworkerPlan(data,bubble);
+   if(!(data.actions||[]).length){pendingCoworkerPlan=null;$("coworkerPlan").disabled=false;}
+  }catch(e){pending.textContent="I couldn't complete that turn. "+e.message;toast(e.message)}
+  finally{coworkerBusy=false;$("coworkerPlan").textContent="Send ↑";$("coworkerPlan").disabled=!!pendingCoworkerPlan;$("coworkerTask").focus()}
  }
- async function executeCoworkerPlan(){
+ async function executeCoworkerPlan(button){
   if(!pendingCoworkerPlan||coworkerBusy)return;
   if(!window.confirm("Approve all listed file writes and terminal commands on this PC? Review the plan carefully before continuing."))return;
-  coworkerBusy=true;const button=$("approveCoworkerPlan");if(button){button.disabled=true;button.textContent="Running…"}
+  coworkerBusy=true;if(button){button.disabled=true;button.textContent="Running…"}
   try{
    const result=await api("/api/v1/coworkers/execute",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan,approved:true})});
-   pendingCoworkerPlan=null;
-   $("coworkerPlanResult").innerHTML='<div class="plan-summary">Execution: '+esc(result.status)+'</div>'+
-    (result.results||[]).map((r,i)=>'<div class="plan-action"><strong>'+(i+1)+'. '+esc(r.kind||"Action")+' · '+esc(r.status||("exit "+r.return_code))+'</strong><pre>'+esc([r.path||"",r.stdout||"",r.stderr||"",r.error||""].filter(Boolean).join("\n"))+'</pre></div>').join("")+
-    '<div class="plan-status">Changes were executed by the local Noodles process. Review your project and test results.</div>';
+   pendingCoworkerPlan=null;if(button)button.textContent="Executed";
+   const report=(result.results||[]).map((r,i)=>(i+1)+". "+(r.kind||"Action")+" · "+(r.status||("exit "+r.return_code))+"\n"+[r.path||"",r.stdout||"",r.stderr||"",r.error||""].filter(Boolean).join("\n")).join("\n\n");
+   const summary="Execution "+result.status+".\n"+(report||"No execution actions were required.")+"\nReview the project and test results.";
+   const body=appendCoworkerMessage("assistant",summary);
+   coworkerHistory.push({role:"assistant",content:summary});coworkerHistory=coworkerHistory.slice(-12);
+   body.scrollIntoView({behavior:"smooth",block:"nearest"});
    toast("Coworker execution finished");loadWorkspaceStatus();
-  }catch(e){toast(e.message);$("coworkerPlanResult").insertAdjacentHTML("beforeend",'<div class="plan-status">Execution failed: '+esc(e.message)+'</div>')}
-  finally{coworkerBusy=false}
+  }catch(e){pendingCoworkerPlan=null;if(button)button.textContent="Execution failed";toast(e.message);appendCoworkerMessage("assistant","Execution failed: "+e.message)}
+  finally{coworkerBusy=false;$("coworkerPlan").disabled=false;$("coworkerTask").focus()}
  }
- async function cancelCoworkerPlan(){
-  if(pendingCoworkerPlan){try{await api("/api/v1/coworkers/cancel",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan})})}catch(e){}}
-  pendingCoworkerPlan=null;$("coworkerPlanResult").hidden=true;
+ async function cancelCoworkerPlan(card){
+  if(pendingCoworkerPlan){
+   try{await api("/api/v1/coworkers/cancel",{method:"POST",body:JSON.stringify({plan_id:pendingCoworkerPlan})})}catch(e){}
+   if(card)card.innerHTML='<div class="plan-status">Plan cancelled. No proposed actions were executed.</div>';
+  }else if(card){card.remove()}
+  pendingCoworkerPlan=null;$("coworkerPlan").disabled=false;
  }
  $("coworkerPlan").addEventListener("click",planCoworkerTask);
-
+ $("coworkerTask").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("coworkerPlan").click()}});
  document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
  $("menuBtn").addEventListener("click",()=>$("sidebar").classList.toggle("open"));
  $("newChat").addEventListener("click",newChat);

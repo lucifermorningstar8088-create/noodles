@@ -59,7 +59,7 @@ class WorkspaceManager:
         for current, dirs, files in os.walk(self.root, followlinks=False):
             dirs[:] = sorted(
                 name for name in dirs
-                if name not in ignored and not name.startswith(".") and not (Path(current) / name).is_symlink()
+                if (\n                    name not in ignored\n                    and not name.startswith(".")\n                    and not (Path(current) / name).is_symlink()\n                )
             )
             for name in sorted(files):
                 if name.startswith("."):
@@ -109,7 +109,7 @@ class WorkspaceManager:
         return {"path": relative_path, "bytes_written": len(content.encode("utf-8"))}
 
     def run_command(self, argv: list[str]) -> dict[str, Any]:
-        if not argv or len(argv) > 32 or any(not isinstance(arg, str) or len(arg) > 2000 for arg in argv):
+        if (\n            not argv\n            or len(argv) > 32\n            or any(not isinstance(arg, str) or len(arg) > 2000 for arg in argv)\n        ):
             raise WorkspaceError("command must be an argument array with at most 32 arguments")
         if any("\\x00" in arg for arg in argv):
             raise WorkspaceError("command arguments cannot contain NUL characters")

@@ -55,8 +55,17 @@ class WorkspaceManager:
 
     def list_files(self) -> list[dict[str, Any]]:
         ignored = {
-            ".git", ".venv", "venv", "node_modules", "__pycache__",
-            ".mypy_cache", ".ssh", ".aws", ".config", "secrets", "credentials",
+            ".git",
+            ".venv",
+            "venv",
+            "node_modules",
+            "__pycache__",
+            ".mypy_cache",
+            ".ssh",
+            ".aws",
+            ".config",
+            "secrets",
+            "credentials",
         }
         sensitive_fragments = ("secret", "credential", "token", "password", "passwd", "private")
         output: list[dict[str, Any]] = []
@@ -140,13 +149,25 @@ class WorkspaceManager:
         if not resolved_executable:
             raise WorkspaceError(f"command executable is not installed: {executable}")
         safe_env_names = {
-            "PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR", "TEMP", "TMP",
-            "TMPDIR", "LANG", "LC_ALL", "APPDATA", "LOCALAPPDATA", "HOMEDRIVE",
-            "HOMEPATH", "PATHEXT", "VIRTUAL_ENV", "UV_CACHE_DIR",
+            "PATH",
+            "HOME",
+            "USERPROFILE",
+            "SYSTEMROOT",
+            "WINDIR",
+            "TEMP",
+            "TMP",
+            "TMPDIR",
+            "LANG",
+            "LC_ALL",
+            "APPDATA",
+            "LOCALAPPDATA",
+            "HOMEDRIVE",
+            "HOMEPATH",
+            "PATHEXT",
+            "VIRTUAL_ENV",
+            "UV_CACHE_DIR",
         }
-        child_env = {
-            key: value for key, value in os.environ.items() if key in safe_env_names
-        }
+        child_env = {key: value for key, value in os.environ.items() if key in safe_env_names}
         try:
             completed = subprocess.run(
                 [resolved_executable, *argv[1:]],

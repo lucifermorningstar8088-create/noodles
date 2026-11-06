@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f7f5">
+<title>Noodles · Local AI workspace</title>
+<style>
+:root{color-scheme:light;--bg:#f7f7f5;--panel:#fff;--panel2:#f1f0ed;--ink:#262624;--muted:#85837d;--line:#e8e6e1;--accent:#c46a45;--accent2:#a95030;--green:#4f8068;--shadow:0 12px 40px rgba(37,35,30,.06);--sidebar:258px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{min-height:100vh;display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr)}.sidebar{height:100vh;position:sticky;top:0;border-right:1px solid var(--line);padding:22px 15px 16px;display:flex;flex-direction:column;background:#f3f2ef}.brand{display:flex;align-items:center;gap:11px;padding:2px 9px 25px}.mark{width:31px;height:31px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:750;font-size:17px;box-shadow:0 4px 12px #c46a4533}.brand-name{font-size:17px;font-weight:650;letter-spacing:-.5px}.brand-sub{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}.new-chat{width:100%;border:1px solid #e4d6cd;background:#fff8f3;border-radius:11px;padding:10px 12px;text-align:left;color:#8e4d34;font-weight:600;display:flex;gap:10px;align-items:center}.nav-label{font-size:10px;color:#a09d96;letter-spacing:.12em;text-transform:uppercase;padding:24px 10px 8px}.nav{display:grid;gap:3px}.nav button{border:0;background:transparent;text-align:left;padding:9px 11px;border-radius:9px;color:#68665f;display:flex;align-items:center;gap:11px}.nav button:hover{background:#eae8e3}.nav button.active{background:#e9e6e0;color:#292824;font-weight:600}.ico{width:18px;text-align:center;font-size:16px;color:#8b8981}.side-bottom{margin-top:auto}.runtime-chip{border:1px solid var(--line);background:#faf9f7;padding:12px;border-radius:12px;display:flex;gap:10px;align-items:center}.pulse{width:8px;height:8px;border-radius:50%;background:#b7a18e}.pulse.online{background:#5b9a72;box-shadow:0 0 0 4px #5b9a721c}.runtime-title{font-size:12px;font-weight:600}.runtime-desc{font-size:11px;color:var(--muted)}.profile{display:flex;align-items:center;gap:10px;padding:16px 7px 0}.avatar{width:29px;height:29px;border-radius:50%;background:#ded8cf;color:#6b5547;display:grid;place-items:center;font-weight:650}.profile-name{font-size:12px;font-weight:600}.profile-sub{font-size:10px;color:var(--muted)}
+.main{min-width:0;display:flex;flex-direction:column;min-height:100vh}.topbar{height:62px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:#ffffffa8;backdrop-filter:blur(12px);position:sticky;top:0;z-index:5}.crumb{font-size:13px;color:#77746d}.crumb strong{color:#33312d;font-weight:600}.top-actions{display:flex;align-items:center;gap:9px}.icon-btn{border:1px solid var(--line);background:#fff;border-radius:9px;width:34px;height:34px;color:#666;display:grid;place-items:center}.mode-pill{font-size:11px;color:#6e6b63;border:1px solid var(--line);padding:6px 10px;border-radius:20px;background:#fff}.content{width:min(100%,1000px);margin:0 auto;padding:45px 34px 32px;flex:1}.view{display:none}.view.active{display:block}.welcome{max-width:740px;margin:50px auto 0}.eyebrow{color:var(--accent2);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:650}.welcome h1{font-size:clamp(34px,5vw,49px);line-height:1.12;letter-spacing:-2.2px;font-weight:550;margin:15px 0 13px}.welcome h1 span{color:#a6a198}.welcome p.lead{color:#77746d;font-size:15px;margin:0 0 29px}.composer{border:1px solid #dfdcd5;background:#fff;border-radius:17px;padding:14px 15px 11px;box-shadow:var(--shadow)}.composer textarea{width:100%;resize:vertical;min-height:83px;border:0;outline:0;background:transparent;color:var(--ink);font:inherit;font-size:15px;line-height:1.6}.composer textarea::placeholder{color:#aaa69e}.composer-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}.composer-hint{font-size:11px;color:#a09c94}.composer-tools{display:flex;align-items:center;gap:9px}.select-mode{border:0;background:transparent;color:#77746d;font-size:11px;padding:7px}.send{border:0;border-radius:10px;background:var(--accent);color:white;padding:9px 15px;font-weight:600;display:flex;gap:8px;align-items:center}.send:hover{background:var(--accent2)}.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:17px}.suggestion{border:1px solid var(--line);background:#fbfaf8;border-radius:12px;padding:13px 14px;text-align:left;color:#55524c}.suggestion:hover{background:#fff;border-color:#d8b5a4}.suggestion b{display:block;font-size:12px;font-weight:600;color:#393732;margin-bottom:3px}.suggestion span{font-size:11px;color:#89867e}
+.chat-wrap{max-width:760px;margin:12px auto 0}.chat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.chat-head h2{font-size:16px;font-weight:600}.messages{display:grid;gap:22px;padding-bottom:25px}.message{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px}.message .avatar{width:28px;height:28px;font-size:11px}.message-body{white-space:pre-wrap;overflow-wrap:anywhere;padding-top:3px;font-size:14px;line-height:1.75}.message.user .message-body{background:#efeee9;border-radius:13px;padding:12px 15px}.message.assistant .avatar{background:#f0dfd5;color:#99583d}.message-meta{font-size:10px;color:#9b978f;margin-bottom:4px}.chat-composer{position:sticky;bottom:14px;background:#fff;border:1px solid #dfdcd5;border-radius:16px;padding:12px 13px;box-shadow:var(--shadow)}.chat-composer textarea{width:100%;border:0;outline:0;resize:vertical;min-height:50px;max-height:180px}.chat-composer-foot{display:flex;justify-content:space-between;align-items:center}.chat-empty{color:#8a867f;font-size:13px;text-align:center;padding:45px 0}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:25px}.page-head h1{font-size:27px;letter-spacing:-1px;font-weight:580;margin:0 0 5px}.page-head p{color:var(--muted);margin:0;font-size:13px}.soft-btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;color:#5e5b54;font-size:12px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}.stat{border:1px solid var(--line);background:#fff;border-radius:13px;padding:16px}.stat-label{color:var(--muted);font-size:11px}.stat-value{font-size:21px;font-weight:620;letter-spacing:-.5px;margin-top:5px}.stat-note{font-size:10px;color:#9a968e;margin-top:2px}.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:13px}.panel-title{font-size:13px;font-weight:650;margin:0 0 13px}.list{display:grid}.list-row{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:12px 0;border-top:1px solid #f0efec}.list-row:first-child{border-top:0}.row-title{font-size:12px;font-weight:600}.row-sub{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.tag{font-size:10px;padding:4px 8px;border-radius:20px;background:#f0efeb;color:#77736b;white-space:nowrap}.tag.good{background:#eaf2eb;color:#52795e}.tag.warn{background:#f8eee5;color:#9b6844}.empty{padding:25px;text-align:center;color:#99958d;font-size:12px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:11px;color:#77746d}.field input,.field select{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fff;color:var(--ink);width:100%}.notice{background:#f7f3ed;border:1px solid #eee3d7;border-radius:11px;padding:12px;color:#7c6d5c;font-size:11px;line-height:1.6}.toast{position:fixed;bottom:22px;right:22px;background:#2e302c;color:#fff;padding:11px 15px;border-radius:10px;box-shadow:var(--shadow);font-size:12px;z-index:20;display:none}.mobile-menu{display:none}
+@media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:12;left:-270px;width:258px;transition:left .2s;box-shadow:var(--shadow)}.sidebar.open{left:0}.mobile-menu{display:grid}.topbar{padding:0 15px;height:56px}.content{padding:28px 17px}.welcome{margin:42px auto 0}.welcome h1{letter-spacing:-1.5px}.suggestions{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.mode-pill{display:none}}
+@media(max-width:420px){.cards{grid-template-columns:1fr}.welcome h1{font-size:34px}.composer-foot{align-items:flex-end}.composer-hint{max-width:130px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+ <div class="brand"><div class="mark">n</div><div><div class="brand-name">noodles</div><div class="brand-sub">local intelligence</div></div></div>
+ <button class="new-chat" id="newChat"><span>＋</span> New conversation <span style="margin-left:auto;color:#b18a76">⌘ K</span></button>
+ <div class="nav-label">Workspace</div>
+ <nav class="nav" aria-label="Main navigation">
+  <button class="active" data-view="chat"><span class="ico">◌</span> Chat</button>
+  <button data-view="models"><span class="ico">◈</span> Models</button>
+  <button data-view="skills"><span class="ico">✳</span> Skills</button>
+  <button data-view="mcp"><span class="ico">⌘</span> MCP connections</button>
+  <button data-view="settings"><span class="ico">⚙</span> Settings</button>
+ </nav>
+ <div class="side-bottom">
+  <div class="runtime-chip"><span class="pulse" id="sidePulse"></span><div><div class="runtime-title" id="sideStatus">Checking runtime…</div><div class="runtime-desc" id="sideModel">Local model status</div></div></div>
+  <div class="profile"><div class="avatar">N</div><div><div class="profile-name">Local workspace</div><div class="profile-sub">Private by design</div></div></div>
+ </div>
+</aside>
+<main class="main">
+ <header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open menu">☰</button><div class="crumb">Workspace <span style="color:#c3bfb7">/</span> <strong id="crumb">New chat</strong></div></div><div class="top-actions"><span class="mode-pill">● Local-first · No cloud fallback</span><button class="icon-btn" id="refreshBtn" title="Refresh status">↻</button></div></header>
+ <div class="content">
+  <section class="view active" id="view-chat">
+   <div class="welcome" id="welcome">
+    <div class="eyebrow">A quieter kind of intelligence</div>
+    <h1>Good to have you here.<br><span>What’s on your mind?</span></h1>
+    <p class="lead">A thoughtful AI workspace, running on your machine. Your model. Your tools. Your control.</p>
+    <div class="composer"><textarea id="welcomeInput" rows="3" placeholder="Ask anything. Noodles is listening…"></textarea><div class="composer-foot"><span class="composer-hint">Your prompt stays with your local runtime.</span><div class="composer-tools"><select class="select-mode" id="welcomeMode" aria-label="Chat mode"><option value="auto">Auto mode</option><option value="offline">Offline</option><option value="online">Online tools</option></select><button class="send" id="welcomeSend">Send <span>↑</span></button></div></div></div>
+    <div class="suggestions">
+     <button class="suggestion" data-prompt="Help me understand a difficult topic, step by step."><b>✳ Learn something</b><span>Break a complex idea into clear steps</span></button>
+     <button class="suggestion" data-prompt="Help me plan and organize my next project."><b>▤ Plan a project</b><span>Turn a rough idea into a practical plan</span></button>
+     <button class="suggestion" data-prompt="Review this code for bugs and security issues:"><b>⌘ Think through code</b><span>Debug, review, and reason carefully</span></button>
+     <button class="suggestion" data-prompt="Help me research this topic and identify what is known versus uncertain:"><b>⌕ Explore a question</b><span>Research with care and context</span></button>
+    </div>
+   </div>
+   <div class="chat-wrap" id="chatWrap" hidden>
+    <div class="chat-head"><h2>Conversation</h2><button class="soft-btn" id="clearChat">Clear chat</button></div>
+    <div class="messages" id="messages"><div class="chat-empty">Your conversation will appear here.</div></div>
+    <div class="chat-composer"><textarea id="chatInput" rows="2" placeholder="Reply to Noodles…"></textarea><div class="chat-composer-foot"><select class="select-mode" id="chatMode" aria-label="Chat mode"><option value="auto">Auto mode</option><option value="offline">Offline</option><option value="online">Online tools</option></select><button class="send" id="chatSend">Send ↑</button></div></div>
+   </div>
+  </section>
+  <section class="view" id="view-models">
+   <div class="page-head"><div><h1>Models</h1><p>Your local model library and runtime controls.</p></div><button class="soft-btn" data-refresh="models">↻ Refresh</button></div>
+   <div class="cards"><div class="stat"><div class="stat-label">Runtime</div><div class="stat-value" id="modelRuntime">Checking</div><div class="stat-note">llama.cpp · local inference</div></div><div class="stat"><div class="stat-label">Installed models</div><div class="stat-value" id="modelCount">—</div><div class="stat-note">Registered GGUF artifacts</div></div><div class="stat"><div class="stat-label">Active model</div><div class="stat-value" id="activeModel" style="font-size:14px">None</div><div class="stat-note">Loaded into local memory</div></div></div>
+   <div class="panel"><h3 class="panel-title">Installed models</h3><div id="modelList" class="list"><div class="empty">Loading your model library…</div></div></div>
+   <div class="panel"><h3 class="panel-title">Hardware overview</h3><div id="hardwareList" class="list"><div class="empty">Checking available hardware…</div></div></div>
+   <div class="notice">Model downloads and loading are explicit actions. Noodles does not silently switch to a cloud model if local inference is unavailable.</div>
+  </section>
+  <section class="view" id="view-skills">
+   <div class="page-head"><div><h1>Skills</h1><p>Give your local agent focused instructions and capabilities.</p></div><button class="soft-btn" data-refresh="skills">↻ Refresh</button></div>
+   <div class="panel"><h3 class="panel-title">Installed skills</h3><div id="skillList" class="list"><div class="empty">Loading skills…</div></div></div>
+   <div class="notice">Skills are instruction files. A skill does not grant unrestricted access: tool and MCP permissions must still be checked by the runtime.</div>
+  </section>
+  <section class="view" id="view-mcp">
+   <div class="page-head"><div><h1>MCP connections</h1><p>Connect tools to your local agent with explicit trust.</p></div><button class="soft-btn" data-refresh="mcp">↻ Refresh</button></div>
+   <div class="panel"><h3 class="panel-title">Registered servers</h3><div id="mcpList" class="list"><div class="empty">Loading MCP connections…</div></div></div>
+   <div class="notice">Only connect servers you trust. A connected MCP server may expose tools that can read data or take actions. Review its permissions before enabling it.</div>
+  </section>
+  <section class="view" id="view-settings">
+   <div class="page-head"><div><h1>Settings</h1><p>Configure how this interface talks to your Noodles API.</p></div></div>
+   <div class="panel"><h3 class="panel-title">API connection</h3><div class="field"><label for="apiBase">Noodles API base URL</label><input id="apiBase" value="" placeholder="Same origin (recommended)"></div><div class="field"><label for="apiToken">Bearer token (kept in memory only)</label><input id="apiToken" type="password" autocomplete="off" placeholder="Optional for authenticated API"></div><button class="send" id="saveSettings">Apply connection</button></div>
+   <div class="panel"><h3 class="panel-title">Privacy & runtime</h3><div class="list-row"><div><div class="row-title">Inference provider</div><div class="row-sub">Local llama.cpp only</div></div><span class="tag good">Local-only</span></div><div class="list-row"><div><div class="row-title">Cloud model fallback</div><div class="row-sub">No provider switching</div></div><span class="tag good">Disabled</span></div><div class="list-row"><div><div class="row-title">API token storage</div><div class="row-sub">Memory only, cleared on page refresh</div></div><span class="tag">Session</span></div></div>
+   <div class="notice">For remote access, use a private network or authenticated TLS tunnel. Do not expose the local API directly to the public internet.</div>
+  </section>
+ </div>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+ const $=id=>document.getElementById(id);
+ let apiBase=location.protocol==="file:"?"http://127.0.0.1:8000":location.origin;
+ let apiToken="",history=[],busy=false;
+ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const toast=(msg)=>{const t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.display="none",3000)};
+ async function api(path,options={}) {
+  const headers={"Content-Type":"application/json",...(apiToken?{"Authorization":"Bearer "+apiToken}:{}),...(options.headers||{})};
+  const response=await fetch(apiBase.replace(/\/$/,"")+path,{...options,headers});
+  const data=await response.json().catch(()=>({detail:response.statusText}));
+  if(!response.ok)throw new Error(data.detail||("Request failed ("+response.status+")"));
+  return data;
+ }
+ function showView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));
+  $("crumb").textContent=({chat:"New chat",models:"Models",skills:"Skills",mcp:"MCP connections",settings:"Settings"})[name]||name;
+  $("sidebar").classList.remove("open");
+  if(name==="models")loadModels();if(name==="skills")loadSkills();if(name==="mcp")loadMcp();
+ }
+ document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+ $("menuBtn").addEventListener("click",()=>$("sidebar").classList.toggle("open"));
+ $("newChat").addEventListener("click",newChat);
+ function newChat(){history=[];$("welcome").hidden=false;$("chatWrap").hidden=true;$("welcomeInput").value="";$("messages").innerHTML="";showView("chat")}
+ $("clearChat").addEventListener("click",newChat);
+ document.querySelectorAll(".suggestion").forEach(b=>b.addEventListener("click",()=>{$("welcomeInput").value=b.dataset.prompt;$("welcomeInput").focus()}));
+ function addMessage(role,text){
+  const empty=$("messages").querySelector(".chat-empty");if(empty)empty.remove();
+  const el=document.createElement("div");el.className="message "+role;
+  el.innerHTML='<div class="avatar">'+(role==="user"?"Y":"n")+'</div><div><div class="message-meta">'+(role==="user"?"You":"Noodles · local model")+'</div><div class="message-body">'+esc(text)+'</div></div>';
+  $("messages").appendChild(el);el.scrollIntoView({behavior:"smooth",block:"nearest"});
+  return el.querySelector(".message-body");
+ }
+ async function sendMessage(input,mode){
+  const message=input.value.trim();if(!message||busy)return;
+  busy=true;$("welcome").hidden=true;$("chatWrap").hidden=false;
+  const first=!history.length;
+  addMessage("user",message);input.value="";
+  const pending=addMessage("assistant","Thinking…");$("chatSend").disabled=true;$("welcomeSend").disabled=true;
+  try{
+   const data=await api("/api/v1/agent/chat",{method:"POST",body:JSON.stringify({message,mode,history})});
+   pending.textContent=data.content||"The local model returned an empty response.";
+   history.push({role:"user",content:message},{role:"assistant",content:data.content||""});
+   if(history.length>12)history=history.slice(-12);
+   if(first)$("crumb").textContent="Conversation";
+  }catch(e){pending.textContent="I couldn’t complete that request. "+e.message;toast(e.message)}
+  finally{busy=false;$("chatSend").disabled=false;$("welcomeSend").disabled=false;input.focus()}
+ }
+ $("welcomeSend").addEventListener("click",()=>sendMessage($("welcomeInput"),$("welcomeMode").value));
+ $("chatSend").addEventListener("click",()=>sendMessage($("chatInput"),$("chatMode").value));
+ ["welcomeInput","chatInput"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$(id=== "welcomeInput"?"welcomeSend":"chatSend").click()}}));
+ async function refreshStatus(){
+  try{const [h,r]=await Promise.all([api("/api/v1/health"),api("/api/v1/models/runtime")]);$("sidePulse").classList.add("online");$("sideStatus").textContent="API connected";$("sideModel").textContent=r.loaded_model_id||"No model loaded";$("modelRuntime").textContent=r.installed?"Installed":"Unavailable";$("activeModel").textContent=r.loaded_model_id||"None";$("sidePulse").title=h.version||"Connected"}
+  catch(e){$("sidePulse").classList.remove("online");$("sideStatus").textContent="API unavailable";$("sideModel").textContent="Check connection settings";$("modelRuntime").textContent="Offline";$("activeModel").textContent="None"}
+ }
+ async function loadModels(){
+  try{
+   const [m,r,hw]=await Promise.all([api("/api/v1/models/installed"),api("/api/v1/models/runtime"),api("/api/v1/models/hardware")]);
+   $("modelCount").textContent=(m.models||[]).length;$("modelRuntime").textContent=r.available?"Available":"Unavailable";$("activeModel").textContent=r.loaded_model_id||"None";
+   $("modelList").innerHTML=(m.models||[]).length?(m.models||[]).map(x=>'<div class="list-row"><div><div class="row-title">'+esc(x.name||x.model_id)+'</div><div class="row-sub">'+esc(x.model_id)+' · '+esc(x.size_bytes?Math.round(x.size_bytes/1073741824*10)/10+" GB":"GGUF artifact")+'</div></div><span class="tag '+(r.loaded_model_id===x.model_id?"good":"")+'">'+(r.loaded_model_id===x.model_id?"Loaded":"Installed")+'</span></div>').join(""):'<div class="empty">No models registered yet. Add a GGUF model through the API to get started.</div>';
+   $("hardwareList").innerHTML=Object.entries(hw).map(([k,v])=>'<div class="list-row"><div class="row-title">'+esc(k.replaceAll("_"," "))+'</div><div class="row-sub">'+esc(typeof v==="object"?JSON.stringify(v):v)+'</div></div>').join("");
+  }catch(e){$("modelList").innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+ }
+ async function loadSkills(){try{const d=await api("/api/v1/skills");$("skillList").innerHTML=(d.skills||[]).length?d.skills.map(s=>'<div class="list-row"><div><div class="row-title">'+esc(s.name||s)+'</div><div class="row-sub">'+esc(s.description||"Installed skill")+'</div></div><span class="tag good">Installed</span></div>').join(""):'<div class="empty">No skills installed yet.</div>'}catch(e){$("skillList").innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+ async function loadMcp(){try{const d=await api("/api/v1/mcp/servers");$("mcpList").innerHTML=(d.servers||[]).length?d.servers.map(s=>'<div class="list-row"><div><div class="row-title">'+esc(s.name)+'</div><div class="row-sub">'+esc(s.transport||"MCP server")+' · '+esc(s.command||s.url||"Configured")+'</div></div><span class="tag '+(s.trusted?"good":"warn")+'">'+(s.trusted?"Trusted":"Untrusted")+'</span></div>').join(""):'<div class="empty">No MCP servers registered.</div>'}catch(e){$("mcpList").innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+ document.querySelectorAll("[data-refresh]").forEach(b=>b.addEventListener("click",()=>({models:loadModels,skills:loadSkills,mcp:loadMcp})[b.dataset.refresh]()));
+ $("refreshBtn").addEventListener("click",()=>{refreshStatus();const active=document.querySelector(".view.active")?.id.replace("view-","");if(active==="models")loadModels();if(active==="skills")loadSkills();if(active==="mcp")loadMcp();toast("Workspace refreshed")});
+ $("saveSettings").addEventListener("click",()=>{const base=$("apiBase").value.trim();apiBase=base?base.replace(/\/$/,""):location.origin;apiToken=$("apiToken").value.trim();refreshStatus();toast("Connection settings applied")});
+ $("apiBase").value=apiBase===location.origin?"":apiBase;
+ document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();newChat()}if(e.key==="Escape")$("sidebar").classList.remove("open")});
+ refreshStatus();
+})();
+</script>
+</body>
+</html>

@@ -57,3 +57,6 @@ python_version = "3.12"
 strict = true
 mypy_path = "src"
 packages = ["noodles"]
+
+[tool.setuptools.package-data]
+noodles = ["ui/*.html"]

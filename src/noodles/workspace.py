@@ -59,9 +59,11 @@ class WorkspaceManager:
         for current, dirs, files in os.walk(self.root, followlinks=False):
             dirs[:] = sorted(
                 name for name in dirs
-                if name not in ignored and not (Path(current) / name).is_symlink()
+                if name not in ignored and not name.startswith(".") and not (Path(current) / name).is_symlink()
             )
             for name in sorted(files):
+                if name.startswith("."):
+                    continue
                 path = Path(current) / name
                 if path.is_symlink():
                     continue

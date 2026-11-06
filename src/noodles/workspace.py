@@ -58,8 +58,13 @@ class WorkspaceManager:
         output: list[dict[str, Any]] = []
         for current, dirs, files in os.walk(self.root, followlinks=False):
             dirs[:] = sorted(
-                name for name in dirs
-                if (\n                    name not in ignored\n                    and not name.startswith(".")\n                    and not (Path(current) / name).is_symlink()\n                )
+                name
+                for name in dirs
+                if (
+                    name not in ignored
+                    and not name.startswith(".")
+                    and not (Path(current) / name).is_symlink()
+                )
             )
             for name in sorted(files):
                 if name.startswith("."):

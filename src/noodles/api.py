@@ -13,8 +13,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 
 from noodles import __version__
-from noodles.agent.orchestrator import AgentError, AgentOrchestrator
 from noodles.agent.coworkers import CoworkerError, CoworkerManager
+from noodles.agent.orchestrator import AgentError, AgentOrchestrator
 from noodles.config import Settings, get_settings
 from noodles.mcp.manager import MCPError, MCPManager, MCPServerConfig, MCPServerRegistry
 from noodles.models.hardware import inspect_hardware

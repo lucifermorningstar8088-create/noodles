@@ -17,7 +17,7 @@ class FakeRuntime:
     def generate(self, messages: list[dict[str, str]], **kwargs: Any) -> dict[str, str]:
         self.calls += 1
         if self.calls == 1:
-            payload = {"summary": "Inspect the project entry point.", "inspect_paths": ["README.md"]}
+            payload = {\n                "summary": "Inspect the project entry point.",\n                "inspect_paths": ["README.md"],\n            }
         else:
             payload = {
                 "summary": "Add a local test artifact.",
